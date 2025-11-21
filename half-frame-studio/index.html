@@ -16,8 +16,14 @@
             --mono: "SF Mono", "Menlo", monospace;
         }
         
-        * { box-sizing: border-box; outline: none; user-select: none; }
-        body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        * { box-sizing: border-box; outline: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+        body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; overflow-y: auto; }
+        
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
         
         /* Icons & Buttons */
         .icon { width: 15px; height: 15px; fill: currentColor; display: block; }
@@ -34,9 +40,12 @@
         .btn.danger:hover { background: rgba(255,69,58,0.2); }
         
         /* Header */
-        header { height: 60px; background: var(--panel); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; z-index: 10; flex-shrink: 0; }
-        .brand { font-weight: 700; font-size: 15px; letter-spacing: 1px; display: flex; align-items: center; gap: 10px; }
+        header { height: 60px; background: var(--panel); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; z-index: 10; flex-shrink: 0; gap: 20px; }
+        .header-left { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
+        .header-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+        .brand { font-weight: 700; font-size: 15px; letter-spacing: 1px; display: flex; align-items: center; gap: 10px; white-space: nowrap; }
         .brand::before { content:''; width:8px; height:8px; background:var(--accent); border-radius:50%; }
+        header .btn .icon { display: none; }
         
         .lang-switch { display: flex; background: #000; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); margin-right: 15px; }
         .lang-opt { font-size: 11px; padding: 4px 10px; cursor: pointer; color: #666; font-weight: 600; transition:0.2s; }
@@ -44,7 +53,7 @@
 
         /* Layout */
         .layout { display: flex; flex: 1; overflow: hidden; }
-        aside { width: 280px; background: var(--panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 5; }
+        aside { width: 280px; flex-shrink: 0; background: var(--panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 5; overflow-y: auto; }
         
         .pane { padding: 24px; border-bottom: 1px solid var(--border); }
         .label { font-size: 11px; color: var(--text-dim); letter-spacing: 1px; margin-bottom: 12px; font-family: var(--mono); display: block; font-weight:600; }
@@ -63,8 +72,9 @@
         .grid-scroll { flex: 1; overflow-y: auto; padding: 30px; padding-bottom: 120px; }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(var(--card-min, 180px), 1fr)); gap: 20px; }
 
-        .card { background: #1a1a1a; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; position: relative; cursor: pointer; transition: 0.15s; }
+        .card { background: #1a1a1a; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; position: relative; cursor: pointer; transition: 0.15s; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
         .card:hover { border-color: #666; transform: translateY(-3px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .card:active { transform: scale(0.98); } 
         .card.selected { border-color: var(--selected); box-shadow: 0 0 0 1px var(--selected); }
         .card.warn { border-color: var(--accent); }
 
@@ -81,8 +91,10 @@
         .badge.ai { color: #000; background: #30d158; border:none; font-weight:bold; }
 
         /* Dock */
-        .dock { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%) translateY(150px); background: rgba(30,30,30,0.95); backdrop-filter: blur(15px); border: 1px solid var(--border); padding: 12px 24px; border-radius: 16px; display: flex; align-items: center; gap: 12px; transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 50; box-shadow: 0 20px 50px rgba(0,0,0,0.6); }
+        .dock { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%) translateY(150px); background: rgba(30,30,30,0.95); backdrop-filter: blur(15px); border: 1px solid var(--border); padding: 12px 24px; border-radius: 16px; display: flex; align-items: center; gap: 12px; transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 500; box-shadow: 0 20px 50px rgba(0,0,0,0.6); }
         .dock.show { transform: translateX(-50%) translateY(0); }
+
+        .dock.hidden { transform: translateX(-50%) translateY(150px) !important; }
 
         /* Privacy Banner */
         .privacy-note { background: rgba(42,42,42,0.85); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 10px 24px; font-size: 12px; color: var(--text-dim); display: flex; gap: 8px; align-items: center; letter-spacing: 0.2px; }
@@ -103,14 +115,14 @@
         .support-links a { color: #ff453a; text-decoration: none; border-bottom: 1px dashed rgba(255,69,58,0.4); padding-bottom: 2px; }
         .support-links a:hover { border-bottom-color: #ff453a; }
         
-        /* Loader */
+    /* Loader */
         #loader { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 999; display: none; flex-direction: column; justify-content: center; align-items: center; }
         .progress-bar { width: 240px; height: 4px; background: #333; border-radius: 2px; margin-top: 20px; overflow: hidden; }
         .progress-fill { height: 100%; background: var(--text); width: 0%; transition: width 0.1s; }
         .load-txt { font-family: var(--mono); font-size: 13px; margin-top: 12px; color: var(--text-dim); }
 
         /* Modals */
-        .modal { position: fixed; inset: 0; background: #000; z-index: 100; display: none; flex-direction: column; }
+        .modal { position: fixed; inset: 0; background: #000; z-index: 2000; display: none; flex-direction: column; }
         .modal.active { display: flex; }
         
         .modal-head { height: 64px; border-bottom: 1px solid var(--border); background: var(--panel); display: flex; justify-content: space-between; align-items: center; padding: 0 24px; flex-shrink: 0; }
@@ -119,7 +131,7 @@
         /* Editor */
         .edit-body { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
         .canvas-stage { flex: 1; background: #080808; display: flex; justify-content: center; align-items: center; overflow: hidden; cursor: col-resize; position: relative; }
-        .canvas-stage canvas { max-width: 95%; max-height: 95%; box-shadow: 0 0 40px rgba(0,0,0,0.5); }
+        .canvas-stage canvas { box-shadow: 0 0 40px rgba(0,0,0,0.5); }
         .preview-dock { height: 240px; background: var(--panel); border-top: 1px solid var(--border); display: flex; gap: 40px; justify-content: center; padding: 30px; flex-shrink: 0; }
         .p-col { width: 180px; display: flex; flex-direction: column; gap: 12px; }
         .p-box { flex: 1; background: #000; border: 1px solid var(--border); border-radius: 6px; display: flex; justify-content: center; align-items: center; overflow: hidden; }
@@ -128,13 +140,37 @@
         .nav-btn:hover { background: rgba(255,255,255,0.2); transform: translateY(-50%) scale(1.05); }
         .nav-l { left: 30px; } .nav-r { right: 30px; }
 
+        /* Slider Controls */
+        .editor-controls { margin-top: 15px; position: relative; height: 44px; display: flex; align-items: center; touch-action: none; width: 0; /* Set via JS */ transition: width 0.2s; }
+        .slider-track { width: 100%; height: 4px; background: #333; border-radius: 2px; position: relative; touch-action: none; }
+        /* Invisible hit area for track */
+        .slider-track::before { content:''; position:absolute; top:-20px; bottom:-20px; left:0; right:0; z-index: 5; }
+        .slider-fill { position: absolute; height: 100%; background: rgba(255, 255, 255, 0.15); top: 0; pointer-events: none; }
+        .slider-thumb { 
+            width: 24px; height: 24px; border-radius: 50%; background: var(--text); border: 2px solid #000;
+            position: absolute; top: 50%; transform: translate(-50%, -50%); 
+            cursor: grab; box-shadow: 0 2px 5px rgba(0,0,0,0.5); z-index: 10; transition: transform 0.1s; touch-action: none;
+        }
+        .slider-thumb:hover { transform: translate(-50%, -50%) scale(1.1); }
+        .slider-thumb.active { transform: translate(-50%, -50%) scale(1.2); background: var(--accent); border-color: #fff; }
+        .slider-thumb::after { content:''; display:block; position:absolute; top:-25px; bottom:-25px; left:-25px; right:-25px; }
+        .slider-thumb.cyan { background: #0ff; }
+
+        .slider-hint { font-size: 12px; color: var(--text-dim); text-align: center; margin-top: 8px; display:none; }
+
         /* Stitch & Drag Animation */
         .stitch-ui { display: flex; height: 100%; overflow: hidden; }
         .s-lib { width: 260px; background: #151515; border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; position: relative; z-index: 20; }
+        .stitch-tabs { display: none; height: 40px; border-bottom: 1px solid var(--border); background: #1a1a1a; flex-shrink: 0; }
+        .s-tab { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #666; cursor: pointer; font-weight: 600; transition: 0.2s; }
+        .s-tab.active { color: var(--text); background: #252525; border-bottom: 2px solid var(--accent); }
+        
         .s-list { flex: 1; overflow-y: auto; padding: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-content: start; }
-        .s-item { aspect-ratio: 1; background: #000; border: 1px solid var(--border); cursor: pointer; opacity: 0.6; transition: 0.2s; position: relative; border-radius: 4px; overflow: hidden; }
-        .s-item:hover { opacity: 1; border-color: #fff; }
-        .s-item img { width: 100%; height: 100%; object-fit: cover; }
+        .s-settings { padding: 15px; border-top: 1px solid var(--border); overflow-y: auto; flex-shrink: 0; }
+        
+        .s-item { aspect-ratio: 1; background: #000; border: 1px solid var(--border); cursor: pointer; transition: 0.2s; position: relative; border-radius: 4px; overflow: hidden; }
+        .s-item:hover { border-color: #fff; }
+        .s-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
         .s-tag { position: absolute; bottom: 4px; right: 4px; background: var(--selected); font-size: 9px; padding: 2px 4px; color: white; border-radius: 3px; font-weight:600; }
 
         .s-work { flex: 1; display: flex; flex-direction: column; background: #050505; }
@@ -156,34 +192,116 @@
         .tl-del { position: absolute; top:4px; right:4px; width:18px; height:18px; background:var(--accent); border-radius:50%; font-size:11px; display:flex; justify-content:center; align-items:center; opacity:0; cursor: pointer; color:white; transition:0.1s; }
         .tl-card:hover .tl-del { opacity: 1; }
 
-        /* Help */
-        .help-content { padding: 40px; max-width: 640px; margin: 0 auto; color: #ccc; line-height: 1.7; font-size: 14px; }
-        .help-sec { margin-bottom: 35px; }
-        .help-h { font-size: 15px; color: white; margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 8px; font-weight: 600; }
-        
         /* Tooltip */
-        .tt-wrap { position:relative; display:inline-block; margin-left:6px; cursor:help; }
+        .tt-wrap { position:relative; display:inline-flex; align-items:center; margin-left:6px; cursor:help; }
         .tt-icon { width:14px; height:14px; background:#333; color:#999; border-radius:50%; font-size:10px; display:flex; align-items:center; justify-content:center; font-family:var(--mono); }
-        .tt-box { position:absolute; bottom:100%; left:-12px; width:220px; background:rgba(0,0,0,0.95); border:1px solid #444; padding:10px; border-radius:6px; font-size:11px; color:#ccc; visibility:hidden; opacity:0; transition:0.2s; pointer-events:none; z-index:100; margin-bottom:8px; line-height:1.5; text-align:left; box-shadow:0 4px 12px rgba(0,0,0,0.5); }
-        .tt-wrap:hover .tt-box, .tt-wrap:active .tt-box { visibility:visible; opacity:1; }
+        /* Original nested tooltip hidden/disabled in favor of global fixed one */
+        .tt-box { display:none; } 
+        
+        /* Global Fixed Tooltip */
+        #g-tt { 
+            position: fixed; background: rgba(0,0,0,0.95); border: 1px solid #444; 
+            padding: 10px; border-radius: 6px; font-size: 11px; color: #ccc; 
+            z-index: 3000; line-height: 1.5; text-align: left; max-width: 240px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.6); pointer-events: none;
+            opacity: 0; transition: opacity 0.2s;
+        }
+        #g-tt.active { opacity: 1; }
 
         /* Stitch & Drag Animation */
         .stitch-ui { display: flex; height: 100%; overflow: hidden; }
         .s-lib { width: 260px; background: #151515; border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; position: relative; z-index: 20; }
 
-        /* Tour */
-        .tour-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; display: none; opacity: 0; transition: opacity 0.3s; }
-        .tour-overlay.active { opacity: 1; }
-        .tour-focus { box-shadow: 0 0 0 9999px rgba(0,0,0,0.75); border-radius: 4px; position: relative; z-index: 2001; pointer-events: none; transition: all 0.3s ease; border: 2px solid var(--selected); }
-        .tour-tip { position: fixed; width: 280px; background: var(--panel); border: 1px solid var(--border); padding: 20px; border-radius: 12px; z-index: 2002; color: var(--text); box-shadow: 0 20px 50px rgba(0,0,0,0.6); transition: all 0.3s ease; opacity: 0; transform: translateY(10px); pointer-events: auto; }
-        .tour-tip.active { opacity: 1; transform: translateY(0); }
-        .tour-h { font-weight: 700; font-size: 15px; margin-bottom: 8px; color: #fff; }
-        .tour-p { font-size: 13px; color: #aaa; line-height: 1.5; margin-bottom: 20px; }
-        .tour-nav { display: flex; justify-content: flex-end; gap: 10px; }
 
         /* Hero Instructions */
         .hero-guide { margin-top: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: var(--text-dim); font-family: var(--mono); text-align: center; }
         .hero-guide span { display: block; }
+        /* Mobile Optimization */
+        .menu-btn { display: none; background:none; border:none; color:var(--text); cursor:pointer; padding:8px; margin-right:8px; }
+        .side-mask { 
+            position:fixed; inset:0; top:0; left:0; right:0; bottom:0;
+            background:rgba(0,0,0,0.6); z-index:4; display:none; 
+            backdrop-filter:blur(2px); -webkit-backdrop-filter: blur(2px);
+            cursor: pointer; -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        .side-mask.active { display:block; }
+        
+        @media (max-width: 768px) {
+            /* Performance: Disable blur and complex shadows on mobile */
+            .dock { backdrop-filter: none; background: rgba(30,30,30,0.98); } 
+            .side-mask { backdrop-filter: none; -webkit-backdrop-filter: none; }
+            .card { box-shadow: none !important; }
+            .card:hover { transform: none; }
+            .canvas-stage canvas { box-shadow: 0 0 15px rgba(0,0,0,0.5); }
+            .slider-thumb { will-change: transform; }
+            
+            header { padding: 0 14px; height: 50px; gap: 12px; }
+            .header-left { gap: 6px; }
+            .brand { font-size: 14px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+            .lang-switch { display: none !important; }
+            .menu-btn { display: flex; align-items: center; flex-shrink: 0; }
+            header .btn { padding: 0; width: 38px; justify-content: center; }
+            header .btn .lbl { display: none; }
+            header .btn .icon { display: block; width: 18px; height: 18px; }
+            .header-right { gap: 8px; }
+            
+            .layout { position: relative; }
+            aside { 
+                position: fixed; top: 0; left: 0; bottom: 0; width: 280px; height: 100%;
+                transform: translateX(-100%); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+                box-shadow: 5px 0 20px rgba(0,0,0,0.5);
+                z-index: 900; /* Sidebar below Modals (2000) */
+                overflow-y: auto; -webkit-overflow-scrolling: touch;
+                background: var(--panel);
+            }
+            aside.active { transform: translateX(0); }
+            .side-mask { z-index: 899; }
+            
+            .dock { 
+                position: fixed; bottom: 40px; bottom: calc(40px + env(safe-area-inset-bottom));
+                left: 50%; transform: translateX(-50%) translateY(150px); 
+                width: 90%; z-index: 500; padding: 10px;
+            }
+            
+            /* Mobile Tour Fixes */
+            /* Ensure Modals are top-most */
+            .modal { z-index: 2000; }
+            .dock.show { transform: translateX(-50%) translateY(0); }
+            .dock .btn { font-size: 12px; padding: 0 12px; height: 40px; }
+            
+            /* Editor Mobile */
+            .modal-head { padding: 0 15px; height: 50px; }
+            .edit-body { flex-direction: column; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+            .canvas-stage { min-height: 40vh; flex: none; }
+            .preview-dock { height: auto; flex: none; padding: 15px; gap: 15px; border-top: none; background: #111; padding-bottom: 60px; }
+            /* Fix Mobile Preview: Previous 'ADJUST Red LINES' div was removed, so nth-child(2) was hiding the Right Preview */
+            .p-col { width: 100%; margin-bottom: 20px; }
+            .p-box { min-height: 200px; }
+            .nav-btn { width: 40px; height: 40px; font-size: 20px; background: rgba(255,255,255,0.15); }
+            .editor-controls { width: 100% !important; margin-top: 20px; padding: 0 20px; box-sizing: border-box; }
+            .slider-thumb { width: 28px; height: 28px; border-width: 3px; }
+            .slider-hint { display:block; margin-bottom: 10px; }
+            
+            /* Stitch Mobile */
+            .stitch-ui { flex-direction: column; }
+            .s-work { order: 1; flex: 1; min-height: 0; }
+            .s-lib { order: 2; width: 100%; height: 240px; border-right: none; border-top: 1px solid var(--border); }
+            .stitch-tabs { display: flex; }
+            
+            /* Mobile Tab Logic */
+            .s-lib.tab-assets .s-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 12px; padding: 12px; }
+            .s-lib.tab-assets .s-settings { display: none; }
+            .s-lib.tab-assets .label[data-k="assets"] { display: none; }
+            
+            .s-lib.tab-settings .s-list { display: none; }
+            .s-lib.tab-settings .s-settings { display: block; flex: 1; border-top: none; }
+            .s-lib.tab-settings .label[data-k="assets"] { display: none; }
+            
+            .s-timeline { height: 130px; }
+            .tl-card { width: 65px; height: 90px; }
+            
+        }
     </style>
 </head>
 <body>
@@ -195,15 +313,25 @@
 </div>
 
 <header>
-    <div class="brand">HALF-FRAME STUDIO</div>
-    <div style="display:flex; align-items:center; gap:12px">
+    <div class="header-left">
+        <button class="menu-btn" onclick="toggleSidebar()">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+        </button>
+        <div class="brand">HALF-FRAME STUDIO</div>
+    </div>
+    <div class="header-right">
         <div class="lang-switch">
             <div class="lang-opt active" id="l-zh" onclick="setLang('zh')">CN</div>
             <div class="lang-opt" id="l-en" onclick="setLang('en')">EN</div>
         </div>
-        <button class="btn" onclick="startTour()">?</button>
-        <button class="btn" id="btnAdd" onclick="document.getElementById('fileInput').click()"><span class="lbl" data-k="add">ADD</span></button>
-        <button class="btn primary" onclick="exportAll()"><span class="lbl" data-k="export">EXPORT</span></button>
+        <button class="btn" id="btnAdd" onclick="document.getElementById('fileInput').click()">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+            <span class="lbl" data-k="add">ADD</span>
+        </button>
+        <button class="btn primary" onclick="exportAll()">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+            <span class="lbl" data-k="export">EXPORT</span>
+        </button>
     </div>
 </header>
 
@@ -213,6 +341,7 @@
 </div>
 
 <div class="layout">
+    <div class="side-mask" id="sideMask" onclick="toggleSidebar(false)"></div>
     <aside>
         <div class="pane">
             <span class="label lbl" data-k="filter">FILTER</span>
@@ -224,7 +353,7 @@
             
             <div style="margin-top:20px;">
                 <span class="label lbl" data-k="view">VIEW SIZE</span>
-                <input type="range" min="120" max="400" value="180" id="viewSize" oninput="document.documentElement.style.setProperty('--card-min', this.value+'px'); localStorage.setItem('hfs_view', this.value)">
+                <input type="range" min="120" max="400" value="180" id="viewSize" oninput="document.documentElement.style.setProperty('--card-min', this.value+'px')">
                 <div style="display:flex; justify-content:space-between; font-size:9px; color:#666; margin-top:5px; font-weight:600">
                     <span class="lbl" data-k="v_s">SMALL</span>
                     <span class="lbl" data-k="v_l">LARGE</span>
@@ -234,11 +363,23 @@
         <div class="pane" id="cutPane">
             <span class="label lbl" data-k="cutting">CUTTING</span>
             <div class="row">
-                <span class="lbl" data-k="mode">Mode</span>
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <span class="lbl" data-k="mode">Mode</span>
+                    <div class="tt-wrap">
+                        <div class="tt-icon">?</div>
+                        <div class="tt-box lbl" data-k="mode_tip"></div>
+                    </div>
+                </div>
                 <select id="cutMode" onchange="refresh()"><option value="remove" class="lbl" data-k="remove">Crop</option><option value="keep" class="lbl" data-k="keep">Keep</option></select>
             </div>
             <div class="row">
-                <span class="lbl" data-k="autofix">Auto Fix</span>
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <span class="lbl" data-k="autofix">Auto Fix</span>
+                    <div class="tt-wrap">
+                        <div class="tt-icon">?</div>
+                        <div class="tt-box lbl" data-k="auto_tip"></div>
+                    </div>
+                </div>
                 <input type="checkbox" id="autoFix" checked onchange="refresh()">
             </div>
             <div style="font-size:11px; color:var(--text-dim); margin-top:8px;">
@@ -246,7 +387,13 @@
             </div>
         </div>
         <div class="pane">
-            <span class="label lbl" data-k="thresh">THRESHOLD</span>
+            <div style="display:flex; align-items:center; gap:6px; margin-bottom:8px;">
+                <span class="label lbl" data-k="thresh">THRESHOLD</span>
+                <div class="tt-wrap">
+                    <div class="tt-icon">?</div>
+                    <div class="tt-box lbl" data-k="sense_tip"></div>
+                </div>
+            </div>
             <input type="range" id="sense" min="0.05" max="0.5" step="0.05" value="0.2" oninput="recalcAll()">
             <div style="display:flex; justify-content:space-between; font-size:9px; color:#666; margin-top:5px; font-weight:600">
                 <span class="lbl" data-k="low">TIGHT</span>
@@ -257,15 +404,18 @@
             <h3 class="lbl" data-k="story_title">致所有半格胶片玩家</h3>
             <p class="lbl" data-k="story_body">我是 Ricoh Auto Half EF2 的使用者。开发这个工具是为了解决手动切割的低效问题，希望它能帮助大家更便捷地享受半格摄影。</p>
             <div class="support-row">
-                <div class="qr-placeholder">
-                    <img src="qr.jpg" alt="支持二维码">
+                <div style="display:flex; flex-direction:column; align-items:center; gap:8px;">
+                    <span class="qr-label lbl" data-k="qr_label">微信赞赏</span>
+                    <div class="qr-placeholder">
+                        <img src="qr.jpg" alt="支持二维码">
+                    </div>
                 </div>
-                <span class="qr-label lbl" data-k="qr_label">微信赞赏</span>
             </div>
             <p class="support-note lbl" data-k="support_statement">您的赞助将用于维护服务器的基本运作。感谢您的理解与支持！</p>
             <div class="support-links">
                 <a class="lbl" data-k="link_xhs" href="https://xhslink.com/m/5Zn6EjRR0DY" target="_blank" rel="noopener">小红书</a>
                 <a class="lbl" data-k="link_douyin" href="https://v.douyin.com/YLTjIRzNf9M" target="_blank" rel="noopener">抖音</a>
+                <a class="lbl" data-k="link_github" href="https://github.com/ruanweiming/half-frame-studio" target="_blank" rel="noopener">GitHub</a>
             </div>
         </div>
     </aside>
@@ -293,54 +443,69 @@
             <div style="font-family:var(--mono); font-size:12px; color:var(--selected); padding-right:12px; border-right:1px solid var(--border);">
                 <span id="selNum">0</span> <span class="lbl" data-k="sel_count">SEL</span>
             </div>
-            <button class="btn primary" onclick="exportSelected()"><span class="lbl" data-k="exp_sel">Export Sel</span></button>
+            <button class="btn primary" onclick="exportSelected()"><span class="lbl" data-k="exp_sel">Export Selected</span></button>
+            <button class="btn" onclick="clearSel()"><span class="lbl" data-k="deselect">Deselect</span></button>
             <div style="width:1px; height:16px; background:#444; margin:0 8px;"></div>
             <button class="btn" id="btnEdit" style="display:none" onclick="openEdit()"><span class="lbl" data-k="edit">Edit</span></button>
             <button class="btn" id="btnStitch" style="display:none" onclick="openStitch()"><span class="lbl" data-k="stitch">Stitch</span></button>
-            <button class="btn danger" onclick="clearSel()"><span class="lbl" data-k="clear">Clear</span></button>
+            <button class="btn danger" id="btnDelete" style="display:none" onclick="deleteSelected()"><span class="lbl" data-k="delete_sel">Delete Photos</span></button>
         </div>
     </main>
 </div>
 
-<div class="modal" id="editor">
+<div class="modal" id="editor" oncontextmenu="return false;">
     <div class="modal-head">
         <div style="display:flex; flex-direction:column;">
             <span class="lbl" style="font-size:10px; color:var(--text-dim); font-family:var(--mono);" data-k="editor_ti">EDITOR</span>
             <span id="editName" style="font-weight:600; font-size:13px;">FILENAME</span>
         </div>
-        <button class="btn primary" onclick="closeEditor()"><span class="lbl" data-k="done">DONE</span></button>
+        <div style="display:flex; gap:10px">
+            <button class="btn" onclick="resetEdit()">↺ <span class="lbl" data-k="reset">RESET</span></button>
+            <button class="btn primary" onclick="closeEditor()"><span class="lbl" data-k="done">DONE</span></button>
+        </div>
     </div>
     <div class="edit-body">
-        <div class="canvas-stage">
-            <div class="nav-btn nav-l" onclick="navEdit(-1)">‹</div>
-            <div class="nav-btn nav-r" onclick="navEdit(1)">›</div>
-            <canvas id="eCvs"></canvas>
+        <div class="canvas-stage" style="flex-direction:column">
+            <div style="flex:1; display:flex; justify-content:center; align-items:center; width:100%; position:relative; overflow:hidden;">
+                <div class="nav-btn nav-l" onclick="navEdit(-1)">‹</div>
+                <div class="nav-btn nav-r" onclick="navEdit(1)">›</div>
+                <canvas id="eCvs"></canvas>
+            </div>
+            <div id="editSlider" class="editor-controls">
+                <div class="slider-track">
+                    <div class="slider-fill" id="slFill"></div>
+                    <div class="slider-thumb" id="slL"></div>
+                    <div class="slider-thumb" id="slR"></div>
+                </div>
+            </div>
+            <div class="slider-hint lbl" data-k="slider_hint">移动端请直接拖动图片上的分割线来调整切割位置</div>
         </div>
         <div class="preview-dock">
             <div class="p-col">
-                <span class="label lbl" style="text-align:center" data-k="left">LEFT</span>
-                <div class="p-box" id="pL"></div>
-                <div style="display:flex; gap:10px; justify-content:center;">
-                    <button class="btn" style="padding:0 10px" onclick="rot('L',-90)">↺</button>
-                    <button class="btn" style="padding:0 10px" onclick="rot('L',90)">↻</button>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <span class="label lbl" style="margin:0" data-k="left">LEFT</span>
+                    <div style="display:flex; gap:10px;">
+                        <button class="btn" style="padding:0 10px" onclick="rot('L',-90)" ontouchend="event.preventDefault(); event.stopPropagation(); rot('L',-90)">↺</button>
+                        <button class="btn" style="padding:0 10px" onclick="rot('L',90)" ontouchend="event.preventDefault(); event.stopPropagation(); rot('L',90)">↻</button>
+                    </div>
                 </div>
-            </div>
-            <div style="display:flex; align-items:center; color:var(--text-dim); font-size:10px; text-align:center; line-height:1.6;">
-                ADJUST<br>Red<br>LINES
+                <div class="p-box" id="pL"></div>
             </div>
             <div class="p-col">
-                <span class="label lbl" style="text-align:center" data-k="right">RIGHT</span>
-                <div class="p-box" id="pR"></div>
-                <div style="display:flex; gap:10px; justify-content:center;">
-                    <button class="btn" style="padding:0 10px" onclick="rot('R',-90)">↺</button>
-                    <button class="btn" style="padding:0 10px" onclick="rot('R',90)">↻</button>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <span class="label lbl" style="margin:0" data-k="right">RIGHT</span>
+                    <div style="display:flex; gap:10px;">
+                        <button class="btn" style="padding:0 10px" onclick="rot('R',-90)" ontouchend="event.preventDefault(); event.stopPropagation(); rot('R',-90)">↺</button>
+                        <button class="btn" style="padding:0 10px" onclick="rot('R',90)" ontouchend="event.preventDefault(); event.stopPropagation(); rot('R',90)">↻</button>
+                    </div>
                 </div>
+                <div class="p-box" id="pR"></div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="modal" id="stitch">
+    <div class="modal" id="stitch" style="pointer-events:auto;" oncontextmenu="return false;">
     <div class="modal-head">
         <span class="lbl modal-title" data-k="stitch_ti">STITCH WORKSHOP</span>
         <div style="display:flex; gap:10px;">
@@ -350,9 +515,13 @@
     </div>
     <div class="stitch-ui">
         <div class="s-lib">
+            <div class="stitch-tabs">
+                <div class="s-tab active" onclick="setStitchTab('assets')"><span class="lbl" data-k="assets">ASSETS</span></div>
+                <div class="s-tab" onclick="setStitchTab('settings')"><span class="lbl" data-k="cutting">SETTINGS</span></div>
+            </div>
             <div class="label lbl" style="padding:20px 15px 0;" data-k="assets">ASSETS</div>
             <div class="s-list" id="sList"></div>
-            <div style="padding:15px; border-top:1px solid var(--border)">
+            <div class="s-settings" id="stitchSettings">
                 <div class="row" style="margin:0; justify-content:flex-start; gap:6px; margin-bottom:12px;">
                     <span class="label lbl" style="margin:0" data-k="gap_mode">GAP MODE</span>
                     <div class="tt-wrap">
@@ -367,64 +536,38 @@
                 </div>
 
                 <div id="gapCtrls">
-                    <div class="row" style="margin:0">
-                        <span class="label lbl" style="margin:0" data-k="gap">WIDTH</span>
-                        <span id="gapVal" style="font-size:11px; color:#666">40px</span>
-                    </div>
-                    <input type="range" id="stitchGap" min="0" max="350" value="40" oninput="document.getElementById('gapVal').innerText=this.value+'px'; drawStitch()">
-                    
-                    <div class="row" style="margin:15px 0 0 0">
-                        <span class="label lbl" style="margin:0" data-k="gray">BASE GRAY</span>
-                        <span id="grayVal" style="font-size:11px; color:#666">10%</span>
-                    </div>
-                    <input type="range" id="stitchGray" min="0" max="100" value="10" oninput="document.getElementById('grayVal').innerText=this.value+'%'; drawStitch()">
+            <div class="row" style="margin:0">
+                <span class="label lbl" style="margin:0" data-k="gap">WIDTH</span>
+                <span id="gapVal" style="font-size:11px; color:#666">260px</span>
+            </div>
+            <input type="range" id="stitchGap" min="0" max="350" value="260" oninput="document.getElementById('gapVal').innerText=this.value+'px'; drawStitch()">
 
-                    <div class="row" style="margin:15px 0 0 0">
-                        <span class="label lbl" style="margin:0" data-k="noise">NOISE</span>
-                        <span id="noiseVal" style="font-size:11px; color:#666">50%</span>
-                    </div>
-                    <input type="range" id="stitchNoise" min="0" max="100" value="50" oninput="document.getElementById('noiseVal').innerText=this.value+'%'; drawStitch()">
+            <div class="row" style="margin:0">
+                <span class="label lbl" style="margin:0" data-k="noise">NOISE</span>
+                <span id="noiseVal" style="font-size:11px; color:#666">50%</span>
+            </div>
+            <input type="range" id="stitchNoise" min="0" max="100" value="50" oninput="document.getElementById('noiseVal').innerText=this.value+'%'; drawStitch()">
                 </div>
             </div>
         </div>
         <div class="s-work">
             <div class="s-canvas-box"><canvas id="sCvs"></canvas></div>
             <div class="s-timeline">
-                <div class="tl-head"><span class="lbl" data-k="timeline">TIMELINE</span><button class="btn" style="height:22px; font-size:10px; padding:0 10px;" onclick="clearTimeline()"><span class="lbl" data-k="clear">CLEAR</span></button></div>
+                <div class="tl-head">
+                    <span class="lbl" data-k="timeline">TIMELINE</span>
+            <button class="btn" id="btnClrTl" type="button" style="height:28px; font-size:11px; padding:0 16px; position:relative; z-index:10;">
+                <span class="lbl" data-k="clear">CLEAR</span>
+                    </button>
+                </div>
                 <div class="tl-track" id="tlTrack"></div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="modal" id="help" style="background:rgba(0,0,0,0.95)">
-    <div class="modal-head">
-        <span class="lbl modal-title" data-k="help_c">HELP</span>
-        <div style="display:flex; gap:10px">
-            <button class="btn primary" onclick="startTour()"><span class="lbl" data-k="tour_start">Interactive Guide</span></button>
-            <button class="btn" onclick="document.getElementById('help').classList.remove('active')">✕</button>
-        </div>
-    </div>
-    <div style="flex:1; overflow-y:auto;">
-        <div class="help-content">
-            <div class="help-sec"><div class="help-h lbl" data-k="h1"></div><p class="lbl" data-k="t1"></p></div>
-            <div class="help-sec"><div class="help-h lbl" data-k="h2"></div><p class="lbl" data-k="t2"></p></div>
-            <div class="help-sec"><div class="help-h lbl" data-k="h3"></div><p class="lbl" data-k="t3"></p></div>
-            <div class="help-sec"><div class="help-h lbl" data-k="h4"></div><p class="lbl" data-k="t4"></p></div>
-            <div class="help-sec"><div class="help-h lbl" data-k="h5"></div><p class="lbl" data-k="t5"></p></div>
-        </div>
-    </div>
-</div>
 
-<div class="tour-overlay" id="tourMask"></div>
-<div class="tour-tip" id="tourTip">
-    <div class="tour-h" id="tHead">Title</div>
-    <div class="tour-p" id="tBody">Content</div>
-    <div class="tour-nav">
-        <button class="btn" onclick="endTour()" style="height:28px; font-size:11px;">Skip</button>
-        <button class="btn primary" onclick="nextTour()" style="height:28px; font-size:11px;">Next</button>
-    </div>
-</div>
+<!-- Global Tooltip -->
+<div id="g-tt"></div>
 
 <input type="file" id="fileInput" multiple accept="image/*" style="display:none">
 
@@ -435,26 +578,15 @@ const DICT={
         add:"添加图片",export:"导出全部",filter:"筛选",all:"全部",warn:"异常",sel:"已选",
         cutting:"切割设置",mode:"模式",remove:"自动去黑边",keep:"保留黑边",autofix:"AI 修正",
         avg:"基准间距",thresh:"识别灵敏度",drop:"拖拽底片至此",sel_count:"已选",exp_sel:"导出选中",
-        edit:"编辑",stitch:"拼图",clear:"取消",editor_ti:"编辑图片",done:"完成",
+        edit:"编辑",stitch:"拼图",clear:"清空时间轴",deselect:"取消选择",delete_sel:"删除照片",delete_confirm:"确认删除所选照片？",
+        editor_ti:"编辑图片",done:"完成", reset:"重置",
         left:"左图预览",right:"右图预览",stitch_ti:"拼图工坊",assets:"素材库",timeline:"时间轴",
-        save:"保存",close:"关闭",help:"使用说明",loading:"正在处理",saving:"正在保存",
-        gap:"黑条宽度",noise:"噪点强度",gray:"基底亮度",help_c:"使用说明",
-        h1:"1. 导入与自动识别",t1:"拖拽图片进入。程序会自动分析画面亮度分布，识别中间的黑条。如果识别结果偏差较大（如夜景），会标记为'异常'。",
-        h2:"2. 灵敏度调节",t2:"'识别灵敏度'决定了黑条的判定范围。滑块向左（数值小）：更严格，只把最黑的部分算作黑条（缝隙变窄）。滑块向右（数值大）：更宽松，把灰暗部分也算作黑条（缝隙变宽）。调整滑块可实时看到切割线变化。",
-        h3:"3. 编辑与修正",t3:"双击图片进入编辑模式。拖动红色（去黑边模式）或青色（保留模式）线条调整切割位置。使用下方按钮旋转左右画面。",
-        h4:"4. 拼图模式",t4:"选中多张图片点击'拼图'。<br><b>人工模拟</b>：生成纯净黑条，可自定义宽度、噪点和基底亮度。<br><b>原始底片</b>：直接使用底片原本的间隔（包含真实漏光和纹理）。",
-        h5:"5. AI 修正",t5:"开启'AI 修正'后，系统会计算整卷胶片的平均间距，强制修复那些偏差过大的图片。",
+        save:"保存",close:"关闭",loading:"正在处理",saving:"正在保存",
+        gap:"黑条宽度",noise:"噪点强度",
         drag_tip:"拖拽素材至此", low:"严", high:"松",
         gap_mode:"黑条模式", syn:"人工模拟", nat:"原始底片",
         gap_help:"<b>人工模拟</b>: 生成标准黑条，可调参数。<br><br><b>原始底片</b>: 保留底片两张照片之间的真实区域（含漏光/灰尘/纹理），还原最真实的胶片感。",
         view:"视图大小", v_s:"小", v_l:"大",
-        tour_start:"开始引导",
-        tour_1_t:"1. 导入图片", tour_1_d:"点击这里或直接拖拽图片到窗口中开始。",
-        tour_2_t:"2. 切割模式", tour_2_d:"根据胶片情况选择“自动去黑边”或“保留黑边”。若整卷曝光不均，可开启“AI 修正”统一中缝宽度。",
-        tour_3_t:"3. 识别灵敏度", tour_3_d:"如果自动切割不准确（如夜景），试着调整这个滑块。",
-        tour_4_t:"4. 视图调节", tour_4_d:"这里可以调整缩略图的大小，方便查看细节。",
-        tour_5_t:"5. 精细编辑", tour_5_d:"双击任意图片，可以手动调整切割线和旋转。",
-        tour_6_t:"6. 拼图与导出", tour_6_d:"选中图片后会出现操作栏。您可以：\n• 导出选中项\n• 进入拼图工坊（制作胶片长条）\n• AI 自动修正异常图片",
         hero1:"1. 点击 ADD 或拖入整卷底片",
         hero2:"2. 选择切割模式与灵敏度（可配合 AI 修正）",
         hero3:"3. 双击图片微调，随后导出或拼图",
@@ -468,40 +600,34 @@ const DICT={
         hero_p4:"开启“AI 修正”后，系统会根据整卷胶片的平均间距自动校准偏差较大的切割。",
         hero_t5:"快捷键",
         hero_p5:"← / →：切换图片<br>ESC：退出编辑",
-        privacy_msg:"本工具所有图片处理均在您的浏览器本地完成，图片绝不会上传到云端。代码已开源，可在 <a href='https://github.com/weimingruan/half-frame-studio' target='_blank' rel='noopener'>GitHub</a> 查看，放心使用！",
+        slider_hint:"移动端请直接拖动图片上的分割线来调整切割位置",
+        mode_tip:"“自动去黑边”：直接输出左右两张半格；“保留黑边”：保留整张底片，仅用分割线指示，方便后续拼图。",
+        auto_tip:"AI 修正会根据整卷的平均缝宽强制拉齐异常帧，适合大多数照片曝光一致的胶卷。",
+        sense_tip:"灵敏度越低越严格（缝更窄），越高越宽松（容易把灰部算作黑条）。夜景或曝光不均时可适当调高。",
+        privacy_msg:"所有图片处理均在本地完成。建议使用电脑访问以获得最佳体验。刷新或关闭页面将导致数据丢失。",
         story_subhead:"心路历程 / 打赏支持",
         story_title:"致所有半格胶片玩家",
         story_body:"我是 Ricoh Auto Half EF2 的使用者。开发这个工具是为了解决手动切割的低效问题，希望它能帮助大家更便捷地享受半格摄影。",
         qr_tip:"放置你的打赏二维码",
-        qr_label:"微信赞赏",
+        qr_label:"喜欢的话轻轻支持下",
         support_statement:"您的赞助将用于维护服务器的基本运作。感谢您的理解与支持！",
         link_xhs:"小红书",
-        link_douyin:"抖音"
+        link_douyin:"抖音",
+        link_github:"GitHub"
     },
     en:{
         add:"Add Images",export:"Export All",filter:"Filter",all:"All",warn:"Alerts",sel:"Selected",
         cutting:"Cutting",mode:"Mode",remove:"Auto Crop",keep:"Keep Gap",autofix:"AI Auto Fix",
-        avg:"Avg Width",thresh:"Sensitivity",drop:"DROP NEGATIVES HERE",sel_count:"Selected",
-        exp_sel:"Export Sel",edit:"Edit",stitch:"Stitch",clear:"Clear",editor_ti:"Editor",done:"Done",
+        avg:"Avg Width",thresh:"Sensitivity",drop:"DROP NEGATIVES HERE",sel_count:"Selected",exp_sel:"Export Selected",
+        edit:"Edit",stitch:"Stitch",clear:"Clear Timeline",deselect:"Deselect",delete_sel:"Delete Photos",delete_confirm:"Delete selected photos permanently?",
+        editor_ti:"Editor",done:"Done", reset:"Reset",
         left:"Left Preview",right:"Right Preview",stitch_ti:"Stitch Workshop",assets:"Assets",timeline:"Timeline",
-        save:"Save",close:"Close",help:"Help",loading:"PROCESSING",saving:"SAVING",
-        gap:"Gap Width",noise:"Noise",gray:"Base Gray",help_c:"User Guide",
-        h1:"1. Import",t1:"Drag & drop images. The app analyzes brightness to find the gap. Anomalies are flagged.",
-        h2:"2. Sensitivity",t2:"Controls detection strictness. Left (Low): Stricter, narrower gap (only darkest pixels). Right (High): Looser, wider gap (includes shadows). Adjust to see real-time feedback.",
-        h3:"3. Edit",t3:"Double-click to edit. Drag lines to adjust crop. Rotate frames independently.",
-        h4:"4. Stitching",t4:"Select images -> 'Stitch'.<br><b>Synthetic</b>: Clean, generated gap with adjustable width, noise, and gray level.<br><b>Natural</b>: Uses the actual film strip between frames (preserving light leaks).",
-        h5:"5. AI Fix",t5:"'AI Auto Fix' forces anomaly images to match the median gap width of the roll.",
+        save:"Save",close:"Close",loading:"PROCESSING",saving:"SAVING",
+        gap:"Gap Width",noise:"Noise",
         drag_tip:"Drag assets here", low:"Tight", high:"Wide",
         gap_mode:"Gap Mode", syn:"Synthetic", nat:"Natural",
         gap_help:"<b>Synthetic</b>: Generated gap with custom Width/Noise/Gray.<br><br><b>Natural</b>: Uses the actual gap captured from the film scan, preserving real texture and light leaks.",
         view:"View Size", v_s:"Small", v_l:"Large",
-        tour_start:"Start Guide",
-        tour_1_t:"1. Import", tour_1_d:"Click here or drag images directly to start.",
-        tour_2_t:"2. Cutting Mode", tour_2_d:"Choose 'Auto Crop' to trim the dark strip or 'Keep Gap' to split manually. Toggle 'AI Auto Fix' to normalize frame spacing when a roll is inconsistent.",
-        tour_3_t:"3. Sensitivity", tour_3_d:"If detection is inaccurate (night shots, etc.), tweak this slider.",
-        tour_4_t:"4. View Size", tour_4_d:"Adjust thumbnail size here to inspect more detail.",
-        tour_5_t:"5. Edit", tour_5_d:"Double-click any image to fine-tune crop lines and rotation.",
-        tour_6_t:"6. Export & Stitch", tour_6_d:"Select images to show the dock. You can:\n• Export selection\n• Enter Stitch Workshop (create film strips)\n• Run AI auto-fix on anomalies",
         hero1:"1. Click ADD or drag a whole roll in",
         hero2:"2. Pick cutting mode & sensitivity (AI Fix optional)",
         hero3:"3. Double-click to fine-tune, then export or stitch",
@@ -515,7 +641,11 @@ const DICT={
         hero_p4:"Enable “AI Auto Fix” to force anomaly frames to use the roll’s average gap width.",
         hero_t5:"Shortcuts",
         hero_p5:"← / → : navigate frames<br>ESC : exit editor",
-        privacy_msg:"All processing runs locally in your browser; images never leave your device. The code is open source—browse it on <a href='https://github.com/ruanweiming/half-frame-studio' target='_blank' rel='noopener'>GitHub</a> with confidence!",
+        slider_hint:"On mobile, drag the divider lines directly on the photo to adjust cuts.",
+        mode_tip:"Auto Crop exports two ready frames per shot. Keep Gap leaves the strip intact and just marks the divider so you can stitch later.",
+        auto_tip:"AI Auto Fix enforces the roll’s median gap width on anomaly frames—best when most photos share similar exposure.",
+        sense_tip:"Lower sensitivity = stricter detection (narrow gap). Higher = looser (wider gap). Nudge it for night shots or uneven scans.",
+        privacy_msg:"All image processing happens locally in your browser; files never leave your device. For the best experience, please use a desktop browser, and remember that refreshing or closing the page will erase all progress.",
         story_subhead:"Story & Support",
         story_title:"To Every Half-Frame Shooter",
         story_body:"I shoot with a Ricoh Auto Half EF2. I built this tool to replace the slow manual split workflow so more people can enjoy half-frame photography with ease.",
@@ -523,29 +653,23 @@ const DICT={
         qr_label:"WeChat Tip",
         support_statement:"Your sponsorship keeps the basic server operations alive. Thank you for the support!",
         link_xhs:"rednote",
-        link_douyin:"Douyin"
+        link_douyin:"Douyin",
+        link_github:"GitHub"
     }
 };
 
-// Persistence & Initialization
+// Initialization without persistence
 function init(){
-    const savedL = localStorage.getItem('hfs_lang');
-    if(savedL) setLang(savedL);
+    const viewSlider = document.getElementById('viewSize');
+    if(viewSlider) document.documentElement.style.setProperty('--card-min', viewSlider.value+'px');
     
-    const savedV = localStorage.getItem('hfs_view');
-    if(savedV){
-        document.documentElement.style.setProperty('--card-min', savedV+'px');
-        // Update slider if possible, but needs ID. Skipping UI sync for simplicity or add ID later.
-    }
-    
-    const savedS = localStorage.getItem('hfs_sense');
-    if(savedS) document.getElementById('sense').value = savedS;
+    // Stop propagation on all modals to prevent click-through
+    document.querySelectorAll('.modal').forEach(m => {
+        const stop = e => e.stopPropagation();
+        m.addEventListener('touchstart', stop, {passive:false});
+        m.addEventListener('click', stop);
+    });
 
-    // Auto Start Tour on First Visit
-    if(!localStorage.getItem('hfs_tour_done')){
-        setTimeout(()=>startTour(), 800);
-        localStorage.setItem('hfs_tour_done', 'true');
-    }
 }
 
 window.onbeforeunload = function() {
@@ -555,97 +679,12 @@ window.onbeforeunload = function() {
 let lang=navigator.language.startsWith('zh')?'zh':'en';
 function t(k){return DICT[lang][k]||k;}
 function setLang(l){
-    lang=l; localStorage.setItem('hfs_lang', l);
+    lang=l;
     document.querySelectorAll('.lang-opt').forEach(e=>e.classList.remove('active'));
     document.getElementById('l-'+l).classList.add('active');
     updateUI();
 }
 function updateUI(){document.querySelectorAll('.lbl').forEach(e=>{const k=e.getAttribute('data-k');if(k)e.innerHTML=t(k);});}
-
-// Tour Logic
-let tourStep = 0;
-const tourSteps = [
-    {sel:'#btnAdd', k_t:'tour_1_t', k_d:'tour_1_d'},
-    {sel:'#cutPane', k_t:'tour_2_t', k_d:'tour_2_d'},
-    {sel:'#sense', k_t:'tour_3_t', k_d:'tour_3_d'},
-    {sel:'.pane:first-child', k_t:'tour_4_t', k_d:'tour_4_d'}, // Filter/View pane
-    {sel:'.grid-scroll', k_t:'tour_5_t', k_d:'tour_5_d'},
-    {sel:'#dock', k_t:'tour_6_t', k_d:'tour_6_d'} // Might be hidden, handle logic
-];
-
-function startTour(){
-    document.getElementById('help').classList.remove('active');
-    document.getElementById('tourMask').style.display='block';
-    setTimeout(()=>document.getElementById('tourMask').classList.add('active'),10);
-    tourStep=0; showTourStep();
-}
-
-function showTourStep(){
-    // Clear previous focus
-    document.querySelectorAll('.tour-focus').forEach(e=>e.classList.remove('tour-focus'));
-    
-    if(tourStep >= tourSteps.length){ endTour(); return; }
-    
-    const s = tourSteps[tourStep];
-    let el = document.querySelector(s.sel);
-    
-    // Special case for Dock: if hidden, show it temporarily or skip?
-    // Let's fake show it if hidden for the tour
-    if(s.sel==='#dock' && !el.classList.contains('show')){
-         el.style.transform='translateX(-50%) translateY(0)'; // Force show
-    }
-
-    if(!el){ tourStep++; showTourStep(); return; }
-    
-    el.classList.add('tour-focus');
-    el.scrollIntoView({behavior:'smooth', block:'center'});
-    
-    const tip = document.getElementById('tourTip');
-    const rect = el.getBoundingClientRect();
-    
-    document.getElementById('tHead').innerText = t(s.k_t);
-    document.getElementById('tBody').innerText = t(s.k_d);
-    
-    // Position Tip with viewport safety
-    const tipW = tip.offsetWidth || 280;
-    const tipH = tip.offsetHeight || 180;
-    const pad = 20;
-    let top = rect.bottom + 15;
-    let left = rect.left + (rect.width/2) - tipW/2;
-    
-    // Horizontal clamp
-    if(left < pad) left = pad;
-    if(left + tipW > window.innerWidth - pad) left = window.innerWidth - pad - tipW;
-    
-    // Vertical flip if not enough space below
-    if(top + tipH > window.innerHeight - pad) {
-        top = rect.top - tipH - 15;
-    }
-    
-    // Final vertical clamp
-    if(top < pad) top = pad;
-    if(top + tipH > window.innerHeight - pad) top = window.innerHeight - pad - tipH;
-    
-    tip.style.top = `${top}px`;
-    tip.style.left = `${left}px`;
-    tip.classList.add('active');
-}
-
-function nextTour(){
-    const s = tourSteps[tourStep];
-    if(s.sel==='#dock'){ document.getElementById('dock').style.transform=''; } // Reset forced show
-    tourStep++; showTourStep();
-}
-
-function endTour(){
-    document.querySelectorAll('.tour-focus').forEach(e=>e.classList.remove('tour-focus'));
-    document.getElementById('tourMask').classList.remove('active');
-    document.getElementById('tourTip').classList.remove('active');
-    setTimeout(()=>document.getElementById('tourMask').style.display='none', 300);
-    
-    // Reset forced dock
-    document.getElementById('dock').style.transform='';
-}
 
 let appData=[], selIds=[], median={w:0,c:0.5,ok:false}, filter='all', editId=null, stitchSlices=[], timeline=[];
 
@@ -685,31 +724,43 @@ function getEffectiveCoords(id){
 function analyze(file, id){
     return new Promise(resolve=>{
         const img=new Image();
+        const url=URL.createObjectURL(file);
         img.onload=()=>{
             const w=img.width, h=img.height;
+            // Performance: Downsample analysis height to max 200px. 
+            // This drastically reduces getImageData time and memory usage while keeping horizontal accuracy.
+            const anaH = Math.min(h, 200); 
             const s=Math.floor(w*0.3), r=Math.floor(w*0.4); // Scan center 40%
+            
             const cvs=document.createElement('canvas'); 
-            cvs.width=r; cvs.height=h;
+            cvs.width=r; cvs.height=anaH;
             const ctx=cvs.getContext('2d');
-            ctx.drawImage(img, s, 0, r, h, 0, 0, r, h);
+            // Draw resized image for analysis
+            ctx.drawImage(img, s, 0, r, h, 0, 0, r, anaH);
             
-            const data=ctx.getImageData(0,0,r,h).data;
+            const data=ctx.getImageData(0,0,r,anaH).data;
             const sums=new Float32Array(r);
-            for(let x=0;x<r;x++){ let sum=0; for(let y=0;y<h;y+=10)sum+=data[(y*r+x)*4]; sums[x]=sum; }
             
-            // Initial detection
-            const d = {id, file, img, w, h, sums, scanStart:s, scanLen:r, gL:0, gR:0, rotL:0, rotR:0, isAnomaly:false};
+            // Step changed from 10 to 1 since we are already downsampled
+            for(let x=0;x<r;x++){ 
+                let sum=0; 
+                for(let y=0;y<anaH;y++) sum+=data[(y*r+x)*4]; 
+                sums[x]=sum; 
+            }
+            
+            // Optimization: Don't keep 'img' object in appData to save memory.
+            // Only keep the URL. We create img only when needed (Grid/Editor).
+            const d = {id, file, src:url, w, h, sums, scanStart:s, scanLen:r, gL:0, gR:0, rotL:0, rotR:0, isAnomaly:false};
             detectGap(d);
             resolve(d);
         };
-        img.src=URL.createObjectURL(file);
+        img.src=url;
     });
 }
 
 // Re-run detection without reading pixels
 function detectGap(d){
     const sense = parseFloat(document.getElementById('sense').value);
-    localStorage.setItem('hfs_sense', sense); // Save threshold
     const r = d.scanLen, sums = d.sums;
     
     let min=Infinity; for(let v of sums) if(v<min) min=v;
@@ -726,9 +777,13 @@ function detectGap(d){
 
 // Real-time update
 function recalcAll(){
-    appData.forEach(d => detectGap(d));
-    calcStats();
-    refresh();
+    // Debounce: only run after 50ms idle
+    if(window._recalcTimer) clearTimeout(window._recalcTimer);
+    window._recalcTimer = setTimeout(() => {
+        appData.forEach(d => detectGap(d));
+        calcStats();
+        refresh();
+    }, 50);
 }
 
 function calcStats(){
@@ -765,9 +820,10 @@ function renderGrid(){
         if(d.rotL!==0) bdg+=`<span class="badge">L ${d.rotL}°</span>`;
         if(d.rotR!==0) bdg+=`<span class="badge">R ${d.rotR}°</span>`;
         
-        card.innerHTML=`<div class="thumb"><img src="${d.img.src}"><div class="overlay">${ov}</div></div><div class="badges">${bdg}</div>`;
+        // Changed d.img.src to d.src since we removed d.img object
+        card.innerHTML=`<div class="thumb"><img src="${d.src}"><div class="overlay">${ov}</div></div><div class="badges">${bdg}</div>`;
         card.onclick=()=>toggleSel(d.id);
-        card.ondblclick=()=>openEdit(d.id);
+        card.ondblclick=()=>openEdit(d.id, true);
         grid.appendChild(card);
     });
     updateUI();
@@ -780,34 +836,122 @@ function updateDock(){
     document.getElementById('dock').classList.toggle('show', n>0);
     document.getElementById('btnEdit').style.display=n===1?'inline-flex':'none';
     document.getElementById('btnStitch').style.display=n>=2?'inline-flex':'none';
+    const delBtn = document.getElementById('btnDelete');
+    if(delBtn) delBtn.style.display=n>0?'inline-flex':'none';
+}
+
+function deleteSelected(){
+    if(!selIds.length) return;
+    if(!confirm(t('delete_confirm'))) return;
+    const removeSet = new Set(selIds);
+    const removingCurrentEdit = editId!==null && removeSet.has(editId);
+    if(removingCurrentEdit) closeEditor();
+    appData = appData.filter(d=>!removeSet.has(d.id));
+    appData.forEach((d,i)=>d.id=i);
+    selIds=[];
+    editId = null;
+    timeline = [];
+    stitchSlices = [];
+    updateTimelineUI();
+    drawStitch();
+    updateDock();
+    calcStats();
+    renderGrid();
+    if(appData.length===0){
+        document.getElementById('emptyHero').style.display='flex';
+    }
 }
 
 // Editor
-const ecvs=document.getElementById('eCvs'), ectx=ecvs.getContext('2d'); let dragMode=null;
+const ecvs=document.getElementById('eCvs'), ectx=ecvs.getContext('2d'); let dragMode=null, dragGapWidth=0, lastPreviewTime=0;
 document.addEventListener('keydown', e=>{
     if(document.getElementById('editor').classList.contains('active')){
         if(e.key==='ArrowLeft') navEdit(-1); if(e.key==='ArrowRight') navEdit(1); if(e.key==='Escape') closeEditor();
     }
 });
-function openEdit(id=null){
+let isGridEdit = false;
+function openEdit(id=null, fromGrid=false){
     if(!id && selIds.length===1) id=selIds[0]; if(id===null) return;
-    editId=id; document.getElementById('editor').classList.add('active');
+    editId=id; isGridEdit = fromGrid; document.getElementById('editor').classList.add('active');
+    document.getElementById('dock').classList.add('hidden'); 
+    
+    // Disable Header Buttons
+    const headBtns = document.querySelectorAll('header button, header .lang-opt');
+    headBtns.forEach(b => b.style.pointerEvents = 'none');
+    
     document.getElementById('editName').innerText=appData[id].file.name;
+    
+    // Cache image to improve performance during drag operations
+    const d = appData[id];
+    if(!d.cachedImg) {
+        d.cachedImg = new Image();
+        d.cachedImg.src = d.src;
+    }
+
     drawEditor(); updatePreviews();
 }
 // Bug Fix: Rename to closeEditor to match HTML onclick
-function closeEditor(){ document.getElementById('editor').classList.remove('active'); renderGrid(); }
+function closeEditor(){ 
+    if(editId!==null && appData[editId] && appData[editId].cachedImg) {
+        delete appData[editId].cachedImg; // Free memory
+    }
+    
+    // Auto-deselect if opened via grid double-click
+    if(isGridEdit && editId !== null){
+        const idx = selIds.indexOf(editId);
+        if(idx > -1) selIds.splice(idx, 1);
+        updateDock();
+    }
+    isGridEdit = false;
+
+    document.getElementById('editor').classList.remove('active'); 
+    document.getElementById('dock').classList.remove('hidden'); 
+    editId = null;
+    
+    // Restore Header Buttons
+    const headBtns = document.querySelectorAll('header button, header .lang-opt');
+    headBtns.forEach(b => b.style.pointerEvents = '');
+    
+    renderGrid(); 
+}
 function navEdit(d){
     const all=appData.map(x=>x.id); let i=all.indexOf(editId)+d;
     if(i<0)i=all.length-1; if(i>=all.length)i=0; editId=all[i];
     drawEditor(); updatePreviews();
 }
+function resetEdit(){
+    const d = appData[editId];
+    // Re-run detection
+    detectGap(d);
+    d.isAnomaly = false; // Reset anomaly override
+    d.rotL = 0; d.rotR = 0; // Reset rotation
+    drawEditor(); updatePreviews();
+}
 function drawEditor(){
     const d=appData[editId], wrap=ecvs.parentElement, asp=d.w/d.h;
-    let dw=wrap.clientWidth, dh=dw/asp;
-    if(dh>wrap.clientHeight){ dh=wrap.clientHeight; dw=dh*asp; }
+    // Apply 95% factor to ensure JS width matches visual width (replacing CSS max-width dependency)
+    let dw=wrap.clientWidth * 0.95, dh=dw/asp;
+    if(dh > wrap.clientHeight * 0.95){ dh=wrap.clientHeight * 0.95; dw=dh*asp; }
+    
     ecvs.width=d.w; ecvs.height=d.h; ecvs.style.width=dw+'px'; ecvs.style.height=dh+'px';
-    ectx.drawImage(d.img,0,0);
+    
+    // Use cached image if available
+    const img = d.cachedImg || new Image();
+    if(!d.cachedImg) img.src = d.src;
+
+    if(img.complete) {
+        ectx.drawImage(img,0,0);
+        drawOverlays();
+    } else {
+        img.onload = () => {
+            ectx.drawImage(img,0,0);
+            drawOverlays();
+        };
+    }
+}
+
+function drawOverlays(){
+    const d=appData[editId];
     const {l,r} = getEffectiveCoords(d.id);
     ectx.fillStyle='rgba(0,0,0,0.7)'; ectx.fillRect(0,0,l,d.h); ectx.fillRect(r,0,d.w-r,d.h);
     const mode=document.getElementById('cutMode').value;
@@ -821,59 +965,299 @@ function drawEditor(){
         ectx.strokeStyle='#0ff'; ectx.lineWidth=4;
         ectx.beginPath(); ectx.moveTo(mid,0); ectx.lineTo(mid,d.h); ectx.stroke();
     }
+    // Use getBoundingClientRect for absolute truth about rendered width
+    let dw = ecvs.getBoundingClientRect().width;
+    if(dw === 0) dw = parseFloat(ecvs.style.width); // Fallback if not yet rendered
+    updateSliderUI(dw, l, r, d.w, mode);
 }
+
+function updateSliderUI(dispW, l, r, realW, mode){
+    const sl=document.getElementById('editSlider');
+    sl.style.width=dispW+'px';
+    const sL=document.getElementById('slL'), sR=document.getElementById('slR'), sF=document.getElementById('slFill');
+    const pctL=(l/realW)*100, pctR=(r/realW)*100;
+    
+    if(mode==='remove'){
+        sL.style.display='block'; sR.style.display='block';
+        sL.style.left=pctL+'%'; sR.style.left=pctR+'%';
+        sF.style.left=pctL+'%'; sF.style.width=(pctR-pctL)+'%';
+        sL.classList.remove('cyan'); sR.classList.remove('cyan');
+        sL.classList.toggle('active', dragMode==='L'); sR.classList.toggle('active', dragMode==='R');
+    } else {
+        const mid=(l+r)/2, pctM=(mid/realW)*100;
+        sL.style.display='block'; sR.style.display='none';
+        sL.style.left=pctM+'%'; sL.classList.add('cyan');
+        sL.classList.toggle('active', dragMode==='L'); 
+        sF.style.width='0';
+    }
+}
+
 ecvs.onmousedown=e=>{
     const d=appData[editId], {l,r}=getEffectiveCoords(editId), rect=ecvs.getBoundingClientRect();
-    const x=(e.clientX-rect.left)*(d.w/rect.width), tol=50;
-    if(Math.abs(x-l)<tol) dragMode='L'; else if(Math.abs(x-r)<tol) dragMode='R';
+    const tol=Math.max(60, rect.width*0.12);
+    const x=(e.clientX-rect.left)*(d.w/rect.width);
+    const mode=document.getElementById('cutMode').value;
+    if(mode==='keep'){
+         if(Math.abs(x-(l+(r-l)/2))<tol) {
+             dragMode='L';
+             dragGapWidth = r - l;
+         }
+    } else {
+         const mid = l + (r-l)/2;
+         if(x<=mid) dragMode='L';
+         else dragMode='R';
+    }
 }
+
+// Bind Slider Events
+const handleSliderStart = (modeStr, e) => {
+    dragMode = modeStr;
+    if(document.getElementById('cutMode').value === 'keep'){
+        const {l,r} = getEffectiveCoords(editId);
+        dragGapWidth = r - l;
+    }
+    if(e) { e.preventDefault(); e.stopPropagation(); }
+    drawEditor();
+};
+
+// Mouse events for desktop
+document.getElementById('slL').onmousedown=e=>{ handleSliderStart('L', e); };
+document.getElementById('slR').onmousedown=e=>{ handleSliderStart('R', e); };
+
+// Pointer events for slider (handles both mouse & touch consistently)
+const sliderTrack = document.getElementById('editSlider');
+let sliderPointerId = null;
+
+function startSliderPointer(e){
+    if(sliderPointerId!==null) return;
+    if(e.pointerType==='mouse' && e.button!==0) return;
+    e.preventDefault(); e.stopPropagation();
+    if(!beginSliderDrag(e.clientX)) return;
+    sliderPointerId = e.pointerId;
+    sliderTrack.setPointerCapture(sliderPointerId);
+    document.addEventListener('pointermove', sliderPointerMove, {passive:false});
+    document.addEventListener('pointerup', endSliderPointer, {passive:false});
+    document.addEventListener('pointercancel', endSliderPointer, {passive:false});
+}
+
+sliderTrack.addEventListener('pointerdown', startSliderPointer);
+// Force preventDefault on touchstart to kill any browser gestures/selection immediately
+sliderTrack.addEventListener('touchstart', e => { e.preventDefault(); }, {passive: false});
+
+document.querySelectorAll('.slider-thumb').forEach(th=>{
+    th.addEventListener('pointerdown', startSliderPointer);
+    th.addEventListener('touchstart', e => { e.preventDefault(); }, {passive: false});
+});
+
+function sliderPointerMove(e){
+    if(sliderPointerId===null || e.pointerId!==sliderPointerId) return;
+    e.preventDefault(); e.stopPropagation();
+    applySliderDrag(e.clientX);
+}
+
+function endSliderPointer(e){
+    if(sliderPointerId===null || e.pointerId!==sliderPointerId) return;
+    e.preventDefault(); e.stopPropagation();
+    sliderTrack.releasePointerCapture(sliderPointerId);
+    sliderPointerId=null;
+    document.removeEventListener('pointermove', sliderPointerMove);
+    document.removeEventListener('pointerup', endSliderPointer);
+    document.removeEventListener('pointercancel', endSliderPointer);
+    dragMode=null;
+    drawEditor();
+    updatePreviews();
+}
+
+function beginSliderDrag(clientX){
+    const rail = sliderTrack.querySelector('.slider-track');
+    if(!rail) return false;
+    const rect = rail.getBoundingClientRect();
+    if(rect.width===0) return false;
+
+    const d = appData[editId];
+    if(!d) return false;
+    const {l,r} = getEffectiveCoords(editId);
+    const mode = document.getElementById('cutMode').value;
+    const pct = (clientX - rect.left) / rect.width;
+    const x = Math.max(0, Math.min(1, pct)) * d.w;
+
+    if(mode === 'keep'){
+        dragMode = 'L';
+        dragGapWidth = r - l;
+    } else {
+        const mid = l + (r-l)/2;
+        dragMode = x <= mid ? 'L' : 'R';
+    }
+
+    applySliderDrag(clientX, true);
+    return true;
+}
+
+function applySliderDrag(clientX, forcePreview=false){
+    const rail = sliderTrack.querySelector('.slider-track');
+    if(!rail) return;
+    const rect = rail.getBoundingClientRect();
+    if(rect.width===0) return;
+
+    const d = appData[editId];
+    if(!d) return;
+    let pct = (clientX - rect.left) / rect.width;
+    pct = Math.max(0, Math.min(1, pct));
+    const x = pct * d.w;
+    const mode = document.getElementById('cutMode').value;
+
+    if(mode==='keep'){
+        const width = dragGapWidth || (d.gR - d.gL);
+        let newX = Math.max(width/2, Math.min(d.w - width/2, x));
+        d.gL = newX - width/2;
+        d.gR = newX + width/2;
+    } else {
+        if(dragMode==='L') d.gL=Math.min(x, d.gR-10); else d.gR=Math.max(x, d.gL+10);
+    }
+    d.isAnomaly=false; 
+    drawEditor();
+    const now = Date.now();
+    if(forcePreview || now - lastPreviewTime > 100) { updatePreviews(); lastPreviewTime = now; }
+}
+
+// Keep mouse events for desktop specific handles (optional fallback)
+document.getElementById('slL').onmousedown=e=>{ handleSliderStart('L'); e.stopPropagation(); };
+document.getElementById('slR').onmousedown=e=>{ handleSliderStart('R'); e.stopPropagation(); };
+
 window.onmousemove=e=>{
     if(!dragMode)return;
     const d=appData[editId], rect=ecvs.getBoundingClientRect();
     const x=(e.clientX-rect.left)*(d.w/rect.width);
-    if(dragMode==='L') d.gL=Math.min(x, d.gR-10); else d.gR=Math.max(x, d.gL+10);
-    d.isAnomaly=false; drawEditor(); updatePreviews();
+    const mode=document.getElementById('cutMode').value;
+    
+    if(mode==='keep'){
+        const width = dragGapWidth;
+        let newX = Math.max(width/2, Math.min(d.w - width/2, x));
+        d.gL = newX - width/2;
+        d.gR = newX + width/2;
+    } else {
+        if(dragMode==='L') d.gL=Math.min(x, d.gR-10); else d.gR=Math.max(x, d.gL+10);
+    }
+    d.isAnomaly=false; 
+    drawEditor();
+    const now = Date.now();
+    if(now - lastPreviewTime > 100) { updatePreviews(); lastPreviewTime = now; }
 }
-window.onmouseup=()=>dragMode=null;
+window.onmouseup=()=>{ 
+    if(dragMode) updatePreviews();
+    dragMode=null; 
+    if(document.getElementById('editor').classList.contains('active')) drawEditor(); 
+};
+
+let isPreviewUpdating = false;
 async function updatePreviews(){
-    const d=appData[editId], {l,r}=getEffectiveCoords(editId);
-    document.getElementById('pL').innerHTML=''; document.getElementById('pL').appendChild(await makeCrop(d,'L',l,r));
-    document.getElementById('pR').innerHTML=''; document.getElementById('pR').appendChild(await makeCrop(d,'R',l,r));
+    if(isPreviewUpdating) return;
+    isPreviewUpdating = true;
+    try {
+        const d=appData[editId], {l,r}=getEffectiveCoords(editId);
+        // Use cached image
+        const img = d.cachedImg || new Image(); 
+        if(!d.cachedImg) { img.src = d.src; if(!img.complete) await img.decode(); }
+        
+        d.tempImg = img; 
+        
+        // Reuse Canvas L
+        const pL = document.getElementById('pL');
+        let cL = pL.querySelector('canvas');
+        if(!cL) { cL = document.createElement('canvas'); pL.appendChild(cL); }
+        await makeCrop(d,'L',l,r,false,cL);
+
+        // Reuse Canvas R
+        const pR = document.getElementById('pR');
+        let cR = pR.querySelector('canvas');
+        if(!cR) { cR = document.createElement('canvas'); pR.appendChild(cR); }
+        await makeCrop(d,'R',l,r,false,cR);
+
+        delete d.tempImg; // Clean up
+    } catch(e){
+        console.error("Preview update failed", e);
+    } finally {
+        isPreviewUpdating = false;
+    }
 }
 function rot(s,dg){ const d=appData[editId]; if(s==='L')d.rotL=(d.rotL+dg)%360; else d.rotR=(d.rotR+dg)%360; updatePreviews(); }
 
 // Stitch with Improved Dragging
     async function openStitch(){
     document.getElementById('stitch').classList.add('active');
+    // Hide dock when entering stitch mode
+    document.getElementById('dock').classList.add('hidden');
+    
+    // Disable Header Buttons to prevent ghost clicks
+    const headBtns = document.querySelectorAll('header button, header .lang-opt');
+    headBtns.forEach(b => b.style.pointerEvents = 'none');
+    
     stitchSlices=[]; timeline=[];
     document.getElementById('sList').innerHTML=''; updateTimelineUI();
+    setStitchTab('assets'); // Default tab
     for(const id of selIds){
         const d=appData[id], {l,r}=getEffectiveCoords(id);
         // Pass 'true' to get extended context for natural gaps
         addToLib(await makeCrop(d,'L',l,r,true),`${id}_L`); 
         addToLib(await makeCrop(d,'R',l,r,true),`${id}_R`);
     }
+    const gapSlider = document.getElementById('stitchGap');
+    const noiseSlider = document.getElementById('stitchNoise');
+    if(gapSlider) document.getElementById('gapVal').innerText = gapSlider.value + 'px';
+    if(noiseSlider) document.getElementById('noiseVal').innerText = noiseSlider.value + '%';
     drawStitch();
 }
 
 function addToLib(obj,uid){
-    stitchSlices.push({uid, cvs:obj.cvs, ctx:obj.ctx, srcId:obj.srcId, rawGap:obj.rawGap});
+    // Optimization: Generate small thumbnail for UI to prevent memory crash
+    const thumbW = 120; 
+    const scale = Math.min(1, thumbW / obj.cvs.width);
+    const thumbH = obj.cvs.height * scale;
+    
+    const tCvs = document.createElement('canvas');
+    tCvs.width=thumbW; tCvs.height=thumbH;
+    tCvs.getContext('2d').drawImage(obj.cvs, 0, 0, thumbW, thumbH);
+    const thumbUrl = tCvs.toDataURL('image/jpeg', 0.7);
+
+    stitchSlices.push({uid, cvs:obj.cvs, thumb:thumbUrl, srcId:obj.srcId, rawGap:obj.rawGap});
+    
     const d=document.createElement('div'); d.className='s-item';
-    d.innerHTML=`<img src="${obj.cvs.toDataURL()}"><div class="s-tag">${uid.split('_')[1]}</div>`;
-    d.onclick=()=>{ timeline.push(uid); updateTimelineUI(); drawStitch(); };
+    d.innerHTML=`<img src="${thumbUrl}"><div class="s-tag">${uid.split('_')[1]}</div>`;
+    d.onclick=()=>{ 
+        timeline.push(uid); 
+        updateTimelineUI(); 
+        drawStitch(); 
+        // Scroll to end
+        setTimeout(()=>{
+            const track = document.getElementById('tlTrack');
+            track.scrollLeft = track.scrollWidth;
+        }, 10);
+    };
     document.getElementById('sList').appendChild(d);
 }
 
 function updateTimelineUI(){
-    const box=document.getElementById('tlTrack'); box.innerHTML='';
-    if(!timeline.length) box.innerHTML=`<span style="color:#555;font-size:11px">${t('drag_tip')}</span>`;
+    const box=document.getElementById('tlTrack'); 
+    // Keep scroll position
+    const scrollLeft = box.scrollLeft;
+    box.innerHTML='';
+    
+    if(!timeline.length) box.innerHTML=`<div style="height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#444; width:100%;">
+        <svg class="icon" style="width:24px;height:24px;margin-bottom:8px;opacity:0.3" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+        <span style="font-size:11px">${t('drag_tip')}</span>
+    </div>`;
+    
     timeline.forEach((uid,idx)=>{
-        const a=stitchSlices.find(s=>s.uid===uid), d=document.createElement('div');
+        const a=stitchSlices.find(s=>s.uid===uid);
+        if(!a) return; // Safety check
+        
+        const d=document.createElement('div');
         d.className='tl-card'; d.draggable=true;
-        d.innerHTML=`<img src="${a.cvs.toDataURL()}"><div class="tl-del">×</div>`;
+        d.dataset.uid = uid; // For touch reordering sync
+        d.innerHTML=`<img src="${a.thumb}"><div class="tl-del">×</div>`;
         d.querySelector('.tl-del').onclick=e=>{e.stopPropagation(); timeline.splice(idx,1); updateTimelineUI(); drawStitch();}
         
-        // Improved Drag Events
+        // Desktop Drag
         d.ondragstart=e=>{ e.dataTransfer.setData('idx',idx); d.classList.add('dragging'); };
         d.ondragend=e=>{ d.classList.remove('dragging'); document.querySelectorAll('.tl-card').forEach(c=>c.classList.remove('drop-target')); };
         d.ondragover=e=>{ e.preventDefault(); d.classList.add('drop-target'); };
@@ -886,8 +1270,109 @@ function updateTimelineUI(){
                 updateTimelineUI(); drawStitch();
             }
         };
+        
+        // Mobile Touch Drag
+        d.addEventListener('touchstart', handleTlTouchStart, {passive:false});
+        d.addEventListener('touchmove', handleTlTouchMove, {passive:false});
+        d.addEventListener('touchend', handleTlTouchEnd);
+
         box.appendChild(d);
     });
+    
+    if(scrollLeft) box.scrollLeft = scrollLeft;
+}
+
+// Mobile Timeline Reordering Logic with Long Press
+let tlStartX = 0, tlStartY = 0;
+let tlDragEl = null, tlLongPressTimer = null, tlIsScrolling = false;
+
+function handleTlTouchStart(e) {
+    if(e.touches.length > 1) return;
+    // If tapping delete button, handle removal immediately
+    if(e.target.closest('.tl-del')){
+        e.preventDefault(); e.stopPropagation();
+        const uid = e.currentTarget.dataset.uid;
+        timeline = timeline.filter(id => id !== uid);
+        updateTimelineUI();
+        drawStitch();
+        tlDragEl = null;
+        return;
+    }
+    
+    tlIsScrolling = false;
+    const el = e.currentTarget;
+    const t = e.touches[0];
+    tlStartX = t.clientX;
+    tlStartY = t.clientY;
+    
+    // Start long press timer
+    tlLongPressTimer = setTimeout(() => {
+        if(tlIsScrolling) return; // Don't start drag if user is scrolling
+        tlDragEl = el;
+        tlDragEl.classList.add('dragging');
+        if(navigator.vibrate) navigator.vibrate(50);
+    }, 300);
+}
+
+function handleTlTouchMove(e) {
+    const t = e.touches[0];
+    
+    // If drag hasn't started yet, detect scroll attempt
+    if(!tlDragEl) {
+        const dx = Math.abs(t.clientX - tlStartX);
+        const dy = Math.abs(t.clientY - tlStartY);
+        // If moved more than 5px, assume scrolling/canceling long press
+        if (dx > 5 || dy > 5) {
+            tlIsScrolling = true;
+            if(tlLongPressTimer) {
+                clearTimeout(tlLongPressTimer);
+                tlLongPressTimer = null;
+            }
+        }
+        return;
+    }
+
+    e.preventDefault(); // Stop scrolling only when dragging
+    
+    const target = document.elementFromPoint(t.clientX, t.clientY);
+    // Ensure we are targeting a card, or if over the delete button, find the card
+    const card = target ? target.closest('.tl-card') : null;
+    
+    // Prevent dragging over self or outside timeline track
+    if(card && card !== tlDragEl && card.parentNode === tlDragEl.parentNode) {
+        // Swap DOM elements visually
+        const siblings = Array.from(tlDragEl.parentNode.children);
+        const curIdx = siblings.indexOf(tlDragEl);
+        const targetIdx = siblings.indexOf(card);
+        
+        if(curIdx < targetIdx) {
+            card.parentNode.insertBefore(tlDragEl, card.nextSibling);
+        } else {
+            card.parentNode.insertBefore(tlDragEl, card);
+        }
+    }
+}
+
+function handleTlTouchEnd(e) {
+    if(tlLongPressTimer) {
+        clearTimeout(tlLongPressTimer);
+        tlLongPressTimer = null;
+    }
+    
+    if(!tlDragEl) return;
+    tlDragEl.classList.remove('dragging');
+    
+    // Sync DOM order back to timeline array
+    const newTimeline = [];
+    const cards = document.querySelectorAll('#tlTrack .tl-card');
+    cards.forEach(c => {
+        if(c.dataset.uid) newTimeline.push(c.dataset.uid);
+    });
+    timeline = newTimeline;
+    
+    tlDragEl = null;
+    updateTimelineUI(); 
+    drawStitch(); 
 }
 
 function drawStitch(){
@@ -899,7 +1384,6 @@ function drawStitch(){
     
     const gap = mode==='syn' ? (parseInt(document.getElementById('stitchGap').value)||0) : 0;
     const noiseLvl = parseInt(document.getElementById('stitchNoise').value)/100;
-    const grayLvl = Math.floor((parseInt(document.getElementById('stitchGray').value)/100) * 255);
     
     // Prepare slices
     const slices = timeline.map(u => stitchSlices.find(s=>s.uid===u));
@@ -938,7 +1422,7 @@ function drawStitch(){
             } else if(gap > 0) {
                 // Synthetic: Draw Generated Gap
                 const gx = x;
-                ctx.fillStyle=`rgb(${grayLvl},${grayLvl},${grayLvl})`;
+                ctx.fillStyle='#000';
                 ctx.fillRect(gx, 0, gap, h);
                 
                 if(noiseLvl > 0){
@@ -958,61 +1442,93 @@ function drawStitch(){
     });
 }
 
-function closeStitch(){document.getElementById('stitch').classList.remove('active');}
+function closeStitch(){
+    document.getElementById('stitch').classList.remove('active');
+    document.getElementById('dock').classList.remove('hidden');
+    
+    // Restore Header Buttons
+    const headBtns = document.querySelectorAll('header button, header .lang-opt');
+    headBtns.forEach(b => b.style.pointerEvents = '');
+}
 function saveStitch(){
     document.getElementById('sCvs').toBlob(b=>{
         if(b) saveAs(b,'stitch.jpg');
     }, 'image/jpeg', 0.95);
 }
-function clearTimeline(){timeline=[];updateTimelineUI();drawStitch();}
+function clearTimeline(){
+    timeline=[];
+    updateTimelineUI();
+    drawStitch();
+}
+
+function setStitchTab(t){
+    document.querySelector('.s-lib').className = `s-lib tab-${t}`;
+    document.querySelectorAll('.s-tab').forEach(e => {
+        const isActive = e.getAttribute('onclick').includes(t);
+        e.classList.toggle('active', isActive);
+    });
+}
 
 // Export & Crop Logic - Enhanced for Natural Gaps
-function makeCrop(d, side, setL, setR, forStitch=false){
-    return new Promise(resolve=>{
-        const c=document.createElement('canvas');
-        const mode=document.getElementById('cutMode').value;
-        let l=setL, r=setR;
-        
-        // If "Keep Gap" mode is on export, we just take the center split
-        if(mode==='keep' && !forStitch){ const m=l+(r-l)/2; l=m; r=m; }
-        
-        const sx = side==='L' ? 0 : r;
-        const rawSw = side==='L' ? l : d.w - r;
-        const sw = Math.floor(Math.max(1, Math.min(rawSw, d.w - sx)));
-        const rot = side==='L' ? d.rotL : d.rotR;
-        const isRot = rot%180!==0;
-        
-        c.width = isRot ? d.h : sw; 
-        c.height = isRot ? sw : d.h;
-        const ctx = c.getContext('2d');
-        
-        // Draw the main crop
-        ctx.translate(c.width/2, c.height/2);
-        ctx.rotate(rot*Math.PI/180);
-        ctx.drawImage(d.img, sx, 0, sw, d.h, -sw/2, -d.h/2, sw, d.h);
-        
-        // Capture the gap for stitching
-        let rawGap = { w:0, c:null };
-        if(forStitch){
-            // Always capture the central gap of the source image
-            // This allows any frame (L or R) to provide a "natural gap" when stitched
-            const gw = r - l;
-            if(gw > 0){
-                const gc = document.createElement('canvas');
-                gc.width = gw; gc.height = d.h;
-                const gctx = gc.getContext('2d');
-                // Simply copy the gap pixels directly
-                gctx.drawImage(d.img, l, 0, gw, d.h, 0, 0, gw, d.h);
-                rawGap = { w:gw, c:gc };
-            }
+async function makeCrop(d, side, setL, setR, forStitch=false, targetCanvas=null){
+    const mode=document.getElementById('cutMode').value;
+    let l=setL, r=setR;
+    
+    // Handle image source: use tempImg if provided (Editor), otherwise create from src (Export/Stitch)
+    let img = d.tempImg;
+    if(!img){
+         img = new Image(); 
+         // Safari robust loading: use onload instead of decode() which can hang
+         await new Promise((resolve, reject) => {
+             img.onload = resolve;
+             img.onerror = () => { console.error("Load fail:", d.file.name); resolve(); }; // Resolve anyway to skip gracefully
+             img.src = d.src;
+             if(img.complete) resolve();
+             // Timeout fallback for Safari
+             setTimeout(resolve, 2000); 
+         });
+    }
+    
+    // If "Keep Gap" mode is on export, we just take the center split
+    if(mode==='keep' && !forStitch){ const m=l+(r-l)/2; l=m; r=m; }
+    
+    const sx = side==='L' ? 0 : r;
+    const rawSw = side==='L' ? l : d.w - r;
+    const sw = Math.floor(Math.max(1, Math.min(rawSw, d.w - sx)));
+    const rot = side==='L' ? d.rotL : d.rotR;
+    const isRot = rot%180!==0;
+    
+    const c = targetCanvas || document.createElement('canvas');
+    c.width = isRot ? d.h : sw; 
+    c.height = isRot ? sw : d.h;
+    const ctx = c.getContext('2d');
+    
+    // Draw the main crop
+    ctx.translate(c.width/2, c.height/2);
+    ctx.rotate(rot*Math.PI/180);
+    ctx.drawImage(img, sx, 0, sw, d.h, -sw/2, -d.h/2, sw, d.h);
+    
+    // Capture the gap for stitching
+    let rawGap = { w:0, c:null };
+    if(forStitch){
+        // Always capture the central gap of the source image
+        // This allows any frame (L or R) to provide a "natural gap" when stitched
+        const gw = r - l;
+        if(gw > 0){
+            const gc = document.createElement('canvas');
+            gc.width = gw; gc.height = d.h;
+            const gctx = gc.getContext('2d');
+            // Simply copy the gap pixels directly
+            gctx.drawImage(img, l, 0, gw, d.h, 0, 0, gw, d.h);
+            rawGap = { w:gw, c:gc };
         }
+    }
 
-        if(forStitch){
-            resolve({ cvs:c, rawGap, srcId:d.id });
-        } else {
-            resolve(c);
-        }
-    });
+    if(forStitch){
+        return { cvs:c, rawGap, srcId:d.id };
+    } else {
+        return c;
+    }
 }
 
 async function exportSelected(){ if(!selIds.length)return; doExport(appData.filter(d=>selIds.includes(d.id))); }
@@ -1025,52 +1541,300 @@ async function doExport(list){
     let cnt=0;
 
     // Helper: Robust blob generation with fallback
-    const getBlob = (c) => new Promise(resolve => {
+    const getBlob = (c, mime) => new Promise(resolve => {
         if(!c || c.width===0) { resolve(null); return; }
+        // Use 1.0 quality for max preservation
         c.toBlob(b => {
             if(b) resolve(b);
             else {
                 try {
-                    // Fallback for browsers where toBlob fails on large canvases
-                    const d = c.toDataURL('image/jpeg', 0.95);
+                    // Fallback
+                    const d = c.toDataURL(mime, 1.0);
                     const bs = atob(d.split(',')[1]);
                     const ab = new Uint8Array(bs.length);
                     for(let i=0; i<bs.length; i++) ab[i] = bs.charCodeAt(i);
-                    resolve(new Blob([ab], {type: 'image/jpeg'}));
+                    resolve(new Blob([ab], {type: mime}));
                 } catch(e){ console.error(e); resolve(null); }
             }
-        }, 'image/jpeg', 0.95);
+        }, mime, 1.0);
     });
 
     for(const d of list){
         txt.innerText=`${t('saving')} ${++cnt}/${list.length}`;
         bar.style.width=`${(cnt/list.length)*100}%`;
-        await new Promise(r=>setTimeout(r,10)); // Increased UI yield
+        await new Promise(r=>setTimeout(r,10)); 
         
         const {l,r} = getEffectiveCoords(d.id);
         
-        const c1 = await makeCrop(d,'L',l,r);
-        const b1 = await getBlob(c1);
-        
-        const c2 = await makeCrop(d,'R',l,r);
-        const b2 = await getBlob(c2);
-        
-        if(b1 && b1.size>0 && b2 && b2.size>0) {
-            const n=d.file.name.replace(/\.[^/.]+$/,"");
-            zip.file(`${n}_1.jpg`, b1); zip.file(`${n}_2.jpg`, b2);
+        // Detect original format. Default to JPEG if unknown/unsupported.
+        let mime = d.file.type;
+        if(mime !== 'image/png' && mime !== 'image/webp') mime = 'image/jpeg';
+        let ext = mime.split('/')[1];
+        // Fix jpeg extension if needed
+        if(ext === 'jpeg') ext = 'jpg';
+
+        try {
+            const c1 = await makeCrop(d,'L',l,r);
+            const b1 = await getBlob(c1, mime);
+            
+            const c2 = await makeCrop(d,'R',l,r);
+            const b2 = await getBlob(c2, mime);
+            
+            if(b1 && b1.size>0 && b2 && b2.size>0) {
+                const n=d.file.name.replace(/\.[^/.]+$/,"");
+                zip.file(`${n}_1.${ext}`, b1); zip.file(`${n}_2.${ext}`, b2);
+            }
+            
+            // Safari Memory Cleanup: Explicitly nullify canvas
+            if(c1) { c1.width=0; c1.height=0; }
+            if(c2) { c2.width=0; c2.height=0; }
+            
+        } catch(err) {
+            console.error(`Skipping ${d.file.name} due to error:`, err);
         }
     }
     
     if(Object.keys(zip.files).length === 0) {
-        alert("Export failed: No valid images generated. Possible cause: Canvas tainting or memory limit.");
         loader.style.display='none';
+        alert("No images were successfully processed.");
         return;
     }
-    
-    zip.generateAsync({type:"blob"}).then(b=>{ saveAs(b,"half-frame-export.zip"); loader.style.display='none'; });
+
+    try{
+        txt.innerText = "Packing ZIP...";
+        bar.style.width = "100%";
+        // Give UI a moment to update
+        await new Promise(r=>setTimeout(r,50));
+
+        const blob = await zip.generateAsync({
+            type:'blob',
+            compression: "STORE", // Faster, less CPU intensive
+            updateCallback: (metadata) => {
+                if(metadata.percent){
+                    txt.innerText = `Packing ZIP: ${metadata.percent.toFixed(0)}%`;
+                    bar.style.width = `${metadata.percent}%`;
+                }
+            }
+        });
+        saveAs(blob, `half-frame-export-${Date.now()}.zip`);
+    }catch(err){
+        console.error('Zip export failed', err);
+        alert('导出失败，请稍后重试。');
+    }finally{
+        loader.style.display='none';
+        bar.style.width='0%';
+        txt.innerText='0 / 0';
+    }
 }
+
+/*
+*/
+
 updateUI();
 setLang(lang);
+
+// Mobile & Touch Logic
+/**
+ * 切换移动端侧边栏显示状态。
+ * @param {?boolean} forceState - true 表示强制打开，false 表示强制关闭，null/未提供则为切换。
+ */
+function toggleSidebar(forceState = null){
+    const aside = document.querySelector('aside');
+    const mask = document.getElementById('sideMask');
+    if(!aside || !mask) return;
+    const isMobile = window.innerWidth <= 768;
+    if(!isMobile){
+        aside.classList.remove('active');
+        mask.classList.remove('active');
+        return;
+    }
+    const shouldOpen = forceState === null ? !aside.classList.contains('active') : forceState;
+    aside.classList.toggle('active', shouldOpen);
+    mask.classList.toggle('active', shouldOpen);
+}
+window.addEventListener('resize', ()=>toggleSidebar(false));
+
+// Touch support for Editor (Canvas)
+const ecvsTouch = document.getElementById('eCvs');
+
+ecvsTouch.addEventListener('touchstart', e => {
+    if(e.touches.length > 1) return;
+    // Removed aggressive preventDefault to allow scrolling when not dragging lines
+    
+    const t = e.touches[0];
+    const rect = ecvsTouch.getBoundingClientRect();
+    // Simulate mousedown logic locally
+    const tol=Math.max(60, rect.width*0.12);
+    const d=appData[editId], {l,r}=getEffectiveCoords(editId);
+    const x=(t.clientX-rect.left)*(d.w/rect.width);
+    const mode=document.getElementById('cutMode').value;
+    
+    let hit = false;
+    if(mode==='keep'){
+         if(Math.abs(x-(l+(r-l)/2))<tol) {
+             dragMode='L';
+             dragGapWidth = r - l;
+             hit = true;
+         }
+    } else {
+         const mid = l + (r-l)/2;
+         if(x<=mid) {
+             // Check distance to left line
+             if(Math.abs(x-l) < tol) { dragMode='L'; hit=true; }
+             // If clicked far left, maybe user wants to scroll? 
+             // But current logic: x<=mid is L. This area based logic is generous.
+             // Let's refine: Only grab if close to the line?
+             // The desktop logic was: click anywhere left of mid -> move L.
+             // For mobile scroll, we should probably be stricter: only near the line.
+             // However, users have fat fingers. 
+             // Let's stick to "click anywhere" BUT only preventDefault if we decide to drag?
+             // Actually, dragging L line by clicking far left is weird.
+             // Better: hit test closer to lines.
+             else if (x < mid - tol) { /* far left, ignore for scroll */ }
+             else { dragMode='L'; hit=true; } // Close to mid or left line
+         }
+         else {
+             // Right side
+             if (x > mid + tol) { /* far right, ignore */ }
+             else { dragMode='R'; hit=true; }
+         }
+         
+         // Fallback to old loose logic if hit testing is too strict?
+         // The old logic: x<=mid -> dragMode='L'. This means tapping anywhere edits.
+         // To allow scroll, we must be stricter.
+         // Re-implementing strict hit test for mobile:
+         if(!hit) {
+             // Check specific lines with tolerance
+             if(Math.abs(x-l) < tol) { dragMode='L'; hit=true; }
+             else if(Math.abs(x-r) < tol) { dragMode='R'; hit=true; }
+         }
+    }
+
+    if(hit) {
+        e.preventDefault(); e.stopPropagation();
+    }
+}, {passive: false});
+
+ecvsTouch.addEventListener('touchmove', e => {
+    if(!dragMode || e.touches.length > 1) return;
+    e.preventDefault(); e.stopPropagation();
+    const t = e.touches[0];
+    const rect = ecvsTouch.getBoundingClientRect();
+    const d = appData[editId];
+    const x=(t.clientX-rect.left)*(d.w/rect.width);
+    const mode=document.getElementById('cutMode').value;
+    
+    if(mode==='keep'){
+        const width = dragGapWidth;
+        let newX = Math.max(width/2, Math.min(d.w - width/2, x));
+        d.gL = newX - width/2;
+        d.gR = newX + width/2;
+    } else {
+        if(dragMode==='L') d.gL=Math.min(x, d.gR-10); else d.gR=Math.max(x, d.gL+10);
+    }
+    d.isAnomaly=false; drawEditor();
+    
+    const now = Date.now();
+    if(now - lastPreviewTime > 100) { updatePreviews(); lastPreviewTime = now; }
+}, {passive: false});
+
+ecvsTouch.addEventListener('touchend', e => {
+    if(dragMode) {
+        e.preventDefault(); e.stopPropagation();
+        dragMode = null;
+        drawEditor();
+        updatePreviews();
+    }
+});
+
+// Clean up Global Listeners
+// (Removed window.touchmove / ecvsTouch mouse event dispatchers)
+
+// Global Tooltip Logic
+const gtt = document.getElementById('g-tt');
+document.querySelectorAll('.tt-wrap').forEach(w => {
+    const show = () => {
+        // Get content from the hidden .tt-box inside
+        const box = w.querySelector('.tt-box'); 
+        if(!box) return;
+        gtt.innerHTML = box.innerHTML;
+        gtt.classList.add('active');
+        
+        const rect = w.getBoundingClientRect();
+        const tW = gtt.offsetWidth || 200; // fallback width
+        const tH = gtt.offsetHeight || 100;
+        
+        // Default: Top Center
+        let top = rect.top - tH - 10;
+        let left = rect.left + (rect.width/2) - (tW/2);
+        
+        // Screen Boundary Check
+        if(top < 10) top = rect.bottom + 10; // Flip to bottom if top clipped
+        if(left < 10) left = 10;
+        if(left + tW > window.innerWidth - 10) left = window.innerWidth - tW - 10;
+        
+        gtt.style.top = top + 'px';
+        gtt.style.left = left + 'px';
+    };
+    const hide = () => gtt.classList.remove('active');
+    
+    w.addEventListener('mouseenter', show);
+    w.addEventListener('mouseleave', hide);
+    
+    // Mobile Touch
+    w.addEventListener('touchstart', e => {
+        e.preventDefault(); e.stopPropagation();
+        if(gtt.classList.contains('active')) hide(); else show();
+    }, {passive:false});
+    
+    // Hide on global touch elsewhere
+    document.addEventListener('touchstart', e => {
+        if(!w.contains(e.target)) hide();
+    }, {passive:true});
+});
+
+// Fix: Robust Event Binding for Timeline Clear
+const btnClrTl = document.getElementById('btnClrTl');
+if(btnClrTl){
+    // Direct execution logic
+    const runClear = () => {
+        clearTimeline();
+    };
+
+    // Handle Click (Desktop)
+    btnClrTl.onclick = (e) => {
+        e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
+        runClear();
+    };
+    
+    // Handle Touch (Mobile)
+    // Use touchend to trigger, preventDefault to stop mouse emulation (ghost clicks)
+    btnClrTl.ontouchend = (e) => {
+        e.preventDefault(); 
+        e.stopPropagation(); 
+        e.stopImmediatePropagation();
+        runClear();
+    };
+    
+    // Block touchstart to prevent scroll initiation on button
+    btnClrTl.ontouchstart = (e) => { e.stopPropagation(); };
+}
+
+// Prevent Timeline Header from passing touches to underlying elements (Header)
+const tlHead = document.querySelector('.tl-head');
+if(tlHead) {
+    const stop = e => { 
+        // Only stop if target is the header itself or non-interactive children
+        // But allow buttons to handle their own events
+        if(e.target.tagName === 'BUTTON' || e.target.closest('button')) return;
+        
+        if(e.cancelable) e.preventDefault(); 
+        e.stopPropagation(); 
+        e.stopImmediatePropagation(); 
+    };
+    tlHead.addEventListener('touchstart', stop, {passive:false});
+    tlHead.addEventListener('click', stop);
+}
 </script>
 </body>
 </html>
