@@ -687,6 +687,7 @@ function setLang(l){
 function updateUI(){document.querySelectorAll('.lbl').forEach(e=>{const k=e.getAttribute('data-k');if(k)e.innerHTML=t(k);});}
 
 let appData=[], selIds=[], median={w:0,c:0.5,ok:false}, filter='all', editId=null, stitchSlices=[], timeline=[];
+let clickTimer = null;
 
 // Call init
 init();
@@ -798,11 +799,17 @@ function calcStats(){
 
 function setFilter(f){ filter=f; document.querySelectorAll('.tab').forEach(e=>e.classList.remove('active')); document.getElementById('f-'+f).classList.add('active'); renderGrid(); }
 function refresh(){ renderGrid(); }
-function renderGrid(){
-    const grid=document.getElementById('grid'); grid.innerHTML='';
+
+function getFilteredList(){
     let list=appData;
     if(filter==='warn') list=list.filter(d=>d.isAnomaly);
     if(filter==='sel') list=list.filter(d=>selIds.includes(d.id));
+    return list;
+}
+
+function renderGrid(){
+    const grid=document.getElementById('grid'); grid.innerHTML='';
+    let list=getFilteredList();
     
     const mode=document.getElementById('cutMode').value;
     const auto=document.getElementById('autoFix').checked;
@@ -822,11 +829,22 @@ function renderGrid(){
         
         // Changed d.img.src to d.src since we removed d.img object
         card.innerHTML=`<div class="thumb"><img src="${d.src}"><div class="overlay">${ov}</div></div><div class="badges">${bdg}</div>`;
-        card.onclick=()=>toggleSel(d.id);
-        card.ondblclick=()=>openEdit(d.id, true);
+        card.onclick=()=>handleCardClick(d.id);
+        card.ondblclick=()=>{
+            if(clickTimer) { clearTimeout(clickTimer); clickTimer = null; }
+            openEdit(d.id, true);
+        };
         grid.appendChild(card);
     });
     updateUI();
+}
+
+function handleCardClick(id){
+    if(clickTimer) { clearTimeout(clickTimer); clickTimer = null; return; }
+    clickTimer = setTimeout(()=>{
+        toggleSel(id);
+        clickTimer = null;
+    }, 250);
 }
 
 function toggleSel(id){ const i=selIds.indexOf(id); if(i>-1)selIds.splice(i,1); else selIds.push(id); updateDock(); renderGrid(); }
@@ -872,6 +890,7 @@ document.addEventListener('keydown', e=>{
 let isGridEdit = false;
 function openEdit(id=null, fromGrid=false){
     if(!id && selIds.length===1) id=selIds[0]; if(id===null) return;
+    
     editId=id; isGridEdit = fromGrid; document.getElementById('editor').classList.add('active');
     document.getElementById('dock').classList.add('hidden'); 
     
@@ -896,12 +915,6 @@ function closeEditor(){
         delete appData[editId].cachedImg; // Free memory
     }
     
-    // Auto-deselect if opened via grid double-click
-    if(isGridEdit && editId !== null){
-        const idx = selIds.indexOf(editId);
-        if(idx > -1) selIds.splice(idx, 1);
-        updateDock();
-    }
     isGridEdit = false;
 
     document.getElementById('editor').classList.remove('active'); 
@@ -915,8 +928,31 @@ function closeEditor(){
     renderGrid(); 
 }
 function navEdit(d){
-    const all=appData.map(x=>x.id); let i=all.indexOf(editId)+d;
-    if(i<0)i=all.length-1; if(i>=all.length)i=0; editId=all[i];
+    const list=getFilteredList();
+    if(!list.length) return;
+    
+    const all=list.map(x=>x.id); 
+    let i=all.indexOf(editId);
+    
+    if(i===-1){
+        // Current item not in filtered list (e.g. fixed anomaly)
+        // Find closest neighbor based on ID order
+        if(d===1){
+            // Next: Find first ID > editId
+            const nextId = all.find(id => id > editId);
+            editId = nextId !== undefined ? nextId : all[0];
+        } else {
+            // Prev: Find last ID < editId
+            let prevId;
+            for(let k=all.length-1; k>=0; k--) if(all[k] < editId) { prevId = all[k]; break; }
+            editId = prevId !== undefined ? prevId : all[all.length-1];
+        }
+    } else {
+        i+=d;
+        if(i<0)i=all.length-1; if(i>=all.length)i=0; 
+        editId=all[i];
+    }
+    
     drawEditor(); updatePreviews();
 }
 function resetEdit(){
