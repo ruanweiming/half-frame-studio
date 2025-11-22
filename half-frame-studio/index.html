@@ -193,6 +193,10 @@
         }
         .support-row > div {
             display: flex; flex-direction: column; align-items: center; gap: 10px;
+            width: 100%;
+        }
+        .support-row > div[style*="display: none"] {
+            display: none !important;
         }
         .qr-placeholder { 
             width: 160px; height: 160px; 
@@ -544,10 +548,17 @@
             <h3 class="lbl" data-k="story_title">致所有半格胶片玩家</h3>
             <p class="lbl" data-k="story_body">我是 Ricoh Auto Half EF2 的使用者。开发这个工具是为了解决手动切割的低效问题，希望它能帮助大家更便捷地享受半格摄影。</p>
             <div class="support-row">
-                <div>
-                    <span class="qr-label lbl" data-k="qr_label">微信赞赏</span>
+                <div id="qr-container-zh">
+                    <span class="qr-label lbl" data-k="qr_label">打赏</span>
                     <div class="qr-placeholder">
-                        <img src="qr.jpg" alt="支持二维码">
+                        <img id="qrImage" src="cnqr.jpg" alt="支持二维码">
+                    </div>
+                </div>
+                <div id="qr-container-en" style="display:none;">
+                    <span class="qr-label lbl" data-k="qr_label">Buy me a coffee</span>
+                    <a href="https://venmo.com/u/Weiming-Ruan-1" target="_blank" rel="noopener" style="display:block; margin-bottom:10px; color:#ff453a; text-decoration:none; font-size:12px; text-align:center; border-bottom:1px dashed rgba(255,69,58,0.4); padding-bottom:2px; transition:0.2s;">venmo</a>
+                    <div class="qr-placeholder">
+                        <img id="qrImageEn" src="enqr.jpg" alt="Support QR">
                     </div>
                 </div>
             </div>
@@ -801,7 +812,7 @@ const DICT={
         story_title:"To Every Half-Frame Shooter",
         story_body:"I shoot with a Ricoh Auto Half EF2. I built this tool to replace the slow manual split workflow so more people can enjoy half-frame photography with ease.",
         qr_tip:"Place your tip QR here",
-        qr_label:"WeChat Tip",
+        qr_label:"Buy me a coffee",
         support_statement:"Your sponsorship keeps the basic server operations alive. Thank you for the support!",
         link_xhs:"rednote",
         link_douyin:"Douyin",
@@ -832,15 +843,51 @@ window.onbeforeunload = function() {
     if(appData.length > 0) return true;
 };
 
-let lang=navigator.language.startsWith('zh')?'zh':'en';
+// Language detection: only Chinese variants match Chinese, all others match English
+const browserLang = navigator.language || navigator.userLanguage || 'en';
+let lang = (browserLang.toLowerCase().startsWith('zh')) ? 'zh' : 'en';
 function t(k){return DICT[lang][k]||k;}
 function setLang(l){
     lang=l;
     document.querySelectorAll('.lang-opt').forEach(e=>e.classList.remove('active'));
-    document.getElementById('l-'+l).classList.add('active');
+    const langBtn = document.getElementById('l-'+l);
+    if(langBtn) langBtn.classList.add('active');
     updateUI();
 }
-function updateUI(){document.querySelectorAll('.lbl').forEach(e=>{const k=e.getAttribute('data-k');if(k)e.innerHTML=t(k);});}
+// Initialize language button and UI on page load
+function initLang(){
+    document.querySelectorAll('.lang-opt').forEach(e=>e.classList.remove('active'));
+    const langBtn = document.getElementById('l-'+lang);
+    if(langBtn) langBtn.classList.add('active');
+    updateUI();
+}
+// Initialize UI on page load
+if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', initLang);
+} else {
+    initLang();
+}
+function updateUI(){
+    document.querySelectorAll('.lbl').forEach(e=>{const k=e.getAttribute('data-k');if(k)e.innerHTML=t(k);});
+    // Update QR code image based on language
+    const qrZh = document.getElementById('qr-container-zh');
+    const qrEn = document.getElementById('qr-container-en');
+    if(lang === 'zh'){
+        if(qrZh) {
+            qrZh.style.display = 'flex';
+            qrZh.style.flexDirection = 'column';
+            qrZh.style.alignItems = 'center';
+        }
+        if(qrEn) qrEn.style.display = 'none';
+    } else {
+        if(qrZh) qrZh.style.display = 'none';
+        if(qrEn) {
+            qrEn.style.display = 'flex';
+            qrEn.style.flexDirection = 'column';
+            qrEn.style.alignItems = 'center';
+        }
+    }
+}
 
 let toastTimer = null;
 function showToast(msg, duration=3000){
