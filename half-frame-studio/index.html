@@ -645,7 +645,6 @@
                     <div class="slider-thumb" id="slR"></div>
                 </div>
             </div>
-            <div class="slider-hint lbl" data-k="slider_hint">移动端请直接拖动图片上的分割线来调整切割位置</div>
         </div>
         <div class="preview-dock">
             <div class="p-col">
@@ -707,7 +706,7 @@
                 <span class="label lbl" style="margin:0" data-k="gap">WIDTH</span>
                 <span id="gapVal" style="font-size:11px; color:#666">260px</span>
             </div>
-            <input type="range" id="stitchGap" min="0" max="350" value="260" oninput="document.getElementById('gapVal').innerText=this.value+'px'; drawStitch()">
+            <input type="range" id="stitchGap" min="0" max="350" value="260" data-base-default="260" data-base-max="350" oninput="handleGapSliderInput(this)">
 
             <div class="row" style="margin:0">
                 <span class="label lbl" style="margin:0" data-k="noise">NOISE</span>
@@ -771,7 +770,6 @@ const DICT={
         hero_p4:"开启“AI 修正”后，系统会根据整卷胶片的平均间距自动校准偏差较大的切割。",
         hero_t5:"快捷键",
         hero_p5:"← / →：切换图片<br>ESC：退出编辑 / 取消全选<br>Ctrl + A：全选",
-        slider_hint:"移动端请直接拖动图片上的分割线来调整切割位置",
         mode_tip:"“自动去黑边”：直接输出左右两张半格；“保留黑边”：保留整张底片，仅用分割线指示，方便后续拼图。",
         auto_tip:"AI 修正会根据整卷的平均缝宽强制拉齐异常帧，适合大多数照片曝光一致的胶卷。",
         sense_tip:"灵敏度越低越严格（缝更窄），越高越宽松（容易把灰部算作黑条）。夜景或曝光不均时可适当调高。",
@@ -784,6 +782,7 @@ const DICT={
         support_statement:"您的赞助将用于维护服务器的基本运作。感谢您的理解与支持！",
         editor_first:"已经是第一张了",
         editor_last:"已经是最后一张了",
+        packing:"正在打包 ZIP...",
         link_xhs:"小红书",
         link_douyin:"抖音",
         link_github:"GitHub",
@@ -791,7 +790,7 @@ const DICT={
         part_dup:"成功导入 {n} 张，跳过 {d} 张重复文件",
         sorted_by:"已按{k}排序 ({o})",
         s_asc:"升序",
-        s_desc:"Desc",
+        s_desc:"降序",
         hq_mode:"原图模式",
         hq_tip:"开启后将使用原图进行预览和编辑，画质更好但占用更多内存。建议电脑端开启，手机端关闭。",
         hq_enabled:"原图模式已开启",
@@ -825,7 +824,6 @@ const DICT={
         hero_p4:"Enable “AI Auto Fix” to force anomaly frames to use the roll’s average gap width.",
         hero_t5:"Shortcuts",
         hero_p5:"← / → : navigate frames<br>ESC : exit editor / deselect all<br>Cmd/Ctrl + A : select all",
-        slider_hint:"On mobile, drag the divider lines directly on the photo to adjust cuts.",
         mode_tip:"Auto Crop exports two ready frames per shot. Keep Gap leaves the strip intact and just marks the divider so you can stitch later.",
         auto_tip:"AI Auto Fix enforces the roll’s median gap width on anomaly frames—best when most photos share similar exposure.",
         sense_tip:"Lower sensitivity = stricter detection (narrow gap). Higher = looser (wider gap). Nudge it for night shots or uneven scans.",
@@ -849,7 +847,8 @@ const DICT={
         hq_enabled:"Original Mode Enabled",
         hq_disabled:"Original Mode Disabled",
         editor_first:"You are on the first frame",
-        editor_last:"You are on the last frame"
+        editor_last:"You are on the last frame",
+        packing:"Packing ZIP..."
     }
 };
 
@@ -1390,6 +1389,55 @@ function calcStats(){
     });
     
     if(cWarn) cWarn.innerText = appData.filter(d=>d.isAnomaly).length;
+    syncStitchGapControls();
+}
+
+function handleGapSliderInput(slider){
+    if(!slider) return;
+    slider.dataset.userSet = '1';
+    const gapVal = document.getElementById('gapVal');
+    if(gapVal) gapVal.innerText = `${slider.value}px`;
+    drawStitch();
+}
+
+function syncStitchGapControls(){
+    const gapSlider = document.getElementById('stitchGap');
+    const gapVal = document.getElementById('gapVal');
+    if(!gapSlider || !gapVal) return;
+    
+    if(!gapSlider.dataset.baseDefault) gapSlider.dataset.baseDefault = gapSlider.value || '0';
+    if(!gapSlider.dataset.baseMax) gapSlider.dataset.baseMax = gapSlider.max || '0';
+    
+    let targetValue = parseInt(gapSlider.dataset.baseDefault,10) || 0;
+    let targetMax = parseInt(gapSlider.dataset.baseMax,10) || 0;
+    if(targetMax === 0) targetMax = 350;
+    if(targetValue === 0) targetValue = Math.min(260, targetMax);
+    
+    const hasMedian = median && median.ok;
+    const lastMedian = parseInt(gapSlider.dataset.lastMedian || '0', 10);
+    const medianGap = hasMedian ? Math.max(0, Math.round(median.w)) : null;
+    const medianChanged = hasMedian && medianGap !== lastMedian;
+    if(gapSlider.dataset.userSet === '1' && !medianChanged){
+        gapVal.innerText = `${gapSlider.value}px`;
+        return;
+    }
+    
+    if(median && median.ok){
+        const avgGap = medianGap;
+        const multiplier = 2;
+        targetMax = Math.max(avgGap * multiplier, avgGap, 50);
+        targetValue = avgGap;
+        gapSlider.dataset.lastMedian = avgGap.toString();
+    } else {
+        gapSlider.dataset.lastMedian = '0';
+    }
+    
+    gapSlider.min = 0;
+    gapSlider.max = targetMax.toString();
+    const appliedValue = Math.min(targetValue, targetMax);
+    gapSlider.value = appliedValue.toString();
+    gapVal.innerText = `${gapSlider.value}px`;
+    gapSlider.dataset.userSet = medianChanged ? '0' : (gapSlider.dataset.userSet || '0');
 }
 
 function setFilter(f){ 
@@ -2159,18 +2207,20 @@ async function openStitch(){
         const stitchMax = (isMobile && !isHQ) ? 600 : 800;
         
         const cropL = await makeCrop(d,'L',l,r,true,null,stitchMax);
-        cropL.meta = { id, side:'L', l, r };
+        const origWidthL = cropL?.origW ?? l;
+        cropL.meta = { id, side:'L', l, r, origW: origWidthL };
         addToLib(cropL, `${id}_L`); 
         
         const cropR = await makeCrop(d,'R',l,r,true,null,stitchMax);
-        cropR.meta = { id, side:'R', l, r };
+        const origWidthR = cropR?.origW ?? (d.w - r);
+        cropR.meta = { id, side:'R', l, r, origW: origWidthR };
         addToLib(cropR, `${id}_R`);
     }
     const gapSlider = document.getElementById('stitchGap');
     const noiseSlider = document.getElementById('stitchNoise');
     const gapVal = document.getElementById('gapVal');
     const noiseVal = document.getElementById('noiseVal');
-    if(gapSlider && gapVal) gapVal.innerText = gapSlider.value + 'px';
+    syncStitchGapControls();
     if(noiseSlider && noiseVal) noiseVal.innerText = noiseSlider.value + '%';
     drawStitch();
 }
@@ -2373,7 +2423,7 @@ function drawStitch(){
     
     const gapSlider = document.getElementById('stitchGap');
     const noiseSlider = document.getElementById('stitchNoise');
-    const gap = mode==='syn' ? (gapSlider ? parseInt(gapSlider.value)||0 : 0) : 0;
+    const gapOrig = mode==='syn' ? (gapSlider ? parseInt(gapSlider.value)||0 : 0) : 0;
     const noiseLvl = noiseSlider ? parseInt(noiseSlider.value)/100 : 0.5;
     
     // Prepare slices
@@ -2384,11 +2434,24 @@ function drawStitch(){
     
     // Calculate total width
     let totalW = 0;
+    const gapToPx = (leftSlice, rightSlice) => {
+        if(gapOrig <= 0) return 0;
+        const getScale = (slice) => {
+            if(!slice || !slice.meta || !slice.meta.origW) return null;
+            const ow = slice.meta.origW;
+            if(!ow || ow <= 0) return null;
+            return slice.cvs.width / ow;
+        };
+        const sA = getScale(leftSlice);
+        const sB = getScale(rightSlice);
+        const scale = sA && sB ? (sA + sB) / 2 : (sA || sB || 1);
+        return Math.max(0, Math.round(gapOrig * scale));
+    };
+    
     slices.forEach((s, i) => {
         totalW += s.cvs.width;
         if(i < slices.length - 1){
-            // Natural mode uses the captured raw gap width
-            totalW += (mode==='nat' ? s.rawGap.w : gap); 
+            totalW += (mode==='nat' ? s.rawGap.w : gapToPx(s, slices[i+1])); 
         }
     });
     
@@ -2408,28 +2471,29 @@ function drawStitch(){
                 // Natural: Draw the captured gap pixels
                 const gw = s.rawGap.w;
                 if(gw > 0 && s.rawGap.c){
-                    // Draw the gap strip
                     ctx.drawImage(s.rawGap.c, x, y);
                 }
                 x += gw;
-            } else if(gap > 0) {
-                // Synthetic: Draw Generated Gap
-                const gx = x;
-                ctx.fillStyle='#000';
-                ctx.fillRect(gx, 0, gap, h);
-                
-                if(noiseLvl > 0){
-                    const dens = 0.05 + (noiseLvl * 0.4);
-                    const count = Math.floor(gap * h * dens);
-                    for(let n=0; n<count; n++){
-                        const br = Math.random() * 100 * noiseLvl;
-                        const op = Math.random() * 0.5 * noiseLvl + 0.1;
-                        ctx.fillStyle=`rgba(${br+20},${br+20},${br+20},${op})`;
-                        const sz = Math.random() > 0.7 ? 2 : 1;
-                        ctx.fillRect(gx + Math.random()*gap, Math.random()*h, sz, sz);
+            } else {
+                const gapPx = gapToPx(s, slices[i+1]);
+                if(gapPx > 0){
+                    const gx = x;
+                    ctx.fillStyle='#000';
+                    ctx.fillRect(gx, 0, gapPx, h);
+                    
+                    if(noiseLvl > 0){
+                        const dens = 0.05 + (noiseLvl * 0.4);
+                        const count = Math.floor(gapPx * h * dens);
+                        for(let n=0; n<count; n++){
+                            const br = Math.random() * 100 * noiseLvl;
+                            const op = Math.random() * 0.5 * noiseLvl + 0.1;
+                            ctx.fillStyle=`rgba(${br+20},${br+20},${br+20},${op})`;
+                            const sz = Math.random() > 0.7 ? 2 : 1;
+                            ctx.fillRect(gx + Math.random()*gapPx, Math.random()*h, sz, sz);
+                        }
                     }
+                    x += gapPx;
                 }
-                x += gap;
             }
         }
     });
@@ -2678,7 +2742,7 @@ async function makeCrop(d, side, setL, setR, forStitch=false, targetCanvas=null,
     ctx.drawImage(img, sx, 0, sw, d.h, -sw/2, -d.h/2, sw, d.h);
     
     // Capture the gap for stitching
-    let rawGap = { w:0, c:null };
+    let rawGap = { w:0, c:null, origW:0 };
     if(forStitch){
         // Always capture the central gap of the source image
         // This allows any frame (L or R) to provide a "natural gap" when stitched
@@ -2699,12 +2763,12 @@ async function makeCrop(d, side, setL, setR, forStitch=false, targetCanvas=null,
             const gctx = gc.getContext('2d');
             gctx.scale(gScale, gScale);
             gctx.drawImage(img, l, 0, gw, d.h, 0, 0, gw, d.h);
-            rawGap = { w:gc.width, c:gc }; // Use scaled width
+            rawGap = { w:gc.width, c:gc, origW:gw }; // Store both scaled + original width
         }
     }
 
     if(forStitch){
-        return { cvs:c, rawGap, srcId:d.id };
+        return { cvs:c, rawGap, srcId:d.id, origW: sw };
     } else {
         return c;
     }
@@ -2825,19 +2889,13 @@ async function doExport(list){
             return;
         }
 
-        txt.innerText = "Packing ZIP...";
+        txt.innerText = t('packing');
         bar.style.width = "100%";
         await new Promise(r=>setTimeout(r,50));
 
         const blob = await zip.generateAsync({
             type:'blob',
-            compression: "STORE", 
-            updateCallback: (metadata) => {
-                if(metadata.percent){
-                    txt.innerText = `Packing ZIP: ${metadata.percent.toFixed(0)}%`;
-                    bar.style.width = `${metadata.percent}%`;
-                }
-            }
+            compression: "STORE"
         });
         saveAs(blob, `half-frame-export-${Date.now()}.zip`);
         
