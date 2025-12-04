@@ -60,7 +60,10 @@ Half-Frame Studio is a pure front-end web application designed for half-frame fi
 ### ⚡ Performance Optimization
 - **Web Worker**: Multi-threaded processing without blocking the main thread
 - **Concurrent Export**: Smart chunking to prevent memory overflow
-- **Memory Management**: Automatic resource cleanup for extended use
+- **Thumbnail Pipeline**: Generates downscaled thumbnails for grid view and stitch assets to significantly reduce memory usage (configurable via `THUMBNAIL_MAX_WIDTH`)
+- **Original Mode Toggle**: Optional “Original Mode” switch intended for desktop use; mobile devices default to thumbnail mode for better stability
+- **Mobile-Safe Concurrency**: Device-aware worker concurrency limits (e.g. fewer parallel tasks on phones) to avoid Safari memory crashes when importing large batches
+- **Memory Management**: Aggressive release of `ImageBitmap` objects and Blob URLs after analysis/export to keep long sessions stable
 
 ---
 
@@ -125,16 +128,16 @@ This project consists of pure static files and can be deployed on any server cap
 1. **Prepare Files**
    ```bash
    # Ensure project files are in server directory
-   /root/var/www/half-frame-studio/
+/root/var/www/half-frame-studio/
    ```
 
 2. **Start Nginx Container**
-   ```bash
-   sudo docker run --name half-frame-web \
-     --restart unless-stopped \
-     -p 8000:80 \
-     -v /root/var/www/half-frame-studio:/usr/share/nginx/html:ro \
-     -d nginx:alpine
+```bash
+sudo docker run --name half-frame-web \
+--restart unless-stopped \
+-p 8000:80 \
+-v /root/var/www/half-frame-studio:/usr/share/nginx/html:ro \
+-d nginx:alpine
    ```
 
 3. **Configure Reverse Proxy (Nginx Proxy Manager)**
@@ -158,6 +161,7 @@ Upload project files to any web server (Apache, Nginx, GitHub Pages, Netlify, Ve
 
 - **Best Experience**: Recommended to use on desktop for better screen space and mouse control
 - **Mobile Support**: Works on mobile devices; drag divider lines directly on images
+- **Original Mode**: On desktop you can enable **Original Mode** for maximum image quality in grid and editor; on mobile it’s recommended to keep it off so the app uses thumbnails and stays stable even with many high‑res scans
 - **Data Safety**: Refreshing or closing the page will lose data; export results promptly
 - **File Formats**: Supports common image formats (JPEG, PNG, WebP, etc.)
 - **Duplicate Detection**: Automatically detects and skips duplicate files
