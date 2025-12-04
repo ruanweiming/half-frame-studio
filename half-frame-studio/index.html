@@ -108,7 +108,7 @@
         .card:hover { border-color: #666; transform: translateY(-3px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
         .card:active { transform: scale(0.98); } 
         .card.selected { border-color: var(--selected); box-shadow: 0 0 0 1px var(--selected); }
-        .card.warn { border-color: var(--accent); }
+        /* 异常卡片不再用特殊边框，仅用徽标提示 */
         
         /* Selection Checkbox */
         .sel-check {
@@ -145,6 +145,7 @@
         .badges { position: absolute; top:8px; right:8px; display: flex; gap:4px; }
         .badge { background:rgba(0,0,0,0.8); color:#fff; font-size:10px; padding:3px 5px; border-radius:4px; font-family: var(--mono); border: 1px solid #444; }
         .badge.ai { color: #000; background: #30d158; border:none; font-weight:bold; }
+        .badge.warn { background:#ffd60a; color:#000; border:none; font-weight:bold; }
         
         .card-foot { padding: 8px 10px; font-size: 11px; color: #999; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-top: 1px solid #333; background: #1a1a1a; }
 
@@ -535,7 +536,7 @@
                         <div class="tt-box lbl" data-k="auto_tip"></div>
                     </div>
                 </div>
-                <input type="checkbox" id="autoFix" checked onchange="refresh()">
+                <input type="checkbox" id="autoFix" checked onchange="handleAutoFixToggle()">
             </div>
             <div style="font-size:11px; color:var(--text-dim); margin-top:8px;">
                 <span class="lbl" data-k="avg">AVG</span>: <span id="statW" style="color:var(--text)">--</span> px
@@ -608,6 +609,8 @@
                 <span id="selNum">0</span> <span class="lbl" data-k="sel_count">SEL</span>
             </div>
             <button class="btn primary" onclick="exportSelected()"><span class="lbl" data-k="exp_sel">Export Selected</span></button>
+            <!-- 仅当选中了异常图片时才显示“移除异常”按钮 -->
+            <button class="btn" id="btnClearAnomaly" style="display:none" onclick="clearSelectedAnomaly()"><span class="lbl" data-k="clear_warn">Clear Anomaly</span></button>
             <button class="btn" onclick="clearSel()"><span class="lbl" data-k="deselect">Deselect</span></button>
             <div style="width:1px; height:16px; background:#444; margin:0 8px;"></div>
             <button class="btn" id="btnEdit" style="display:none" onclick="openEdit()"><span class="lbl" data-k="edit">Edit</span></button>
@@ -745,6 +748,7 @@ const DICT={
         cutting:"切割设置",mode:"模式",remove:"自动去黑边",keep:"保留黑边",autofix:"AI 修正",
         avg:"基准间距",thresh:"识别灵敏度",drop:"拖拽或点击添加",sel_count:"已选",exp_sel:"导出选中",
         edit:"编辑",stitch:"拼图",clear:"清空时间轴",deselect:"取消选择",delete_sel:"删除照片",delete_confirm:"确认删除所选照片？",
+        clear_warn:"移除异常",
         editor_ti:"编辑图片",done:"完成", reset:"重置",
         left:"左图预览",right:"右图预览",stitch_ti:"拼图工坊",assets:"素材库",timeline:"时间轴",
         save:"保存",close:"关闭",loading:"正在处理",saving:"正在保存",
@@ -778,6 +782,8 @@ const DICT={
         qr_tip:"放置你的打赏二维码",
         qr_label:"喜欢的话轻轻支持下",
         support_statement:"您的赞助将用于维护服务器的基本运作。感谢您的理解与支持！",
+        editor_first:"已经是第一张了",
+        editor_last:"已经是最后一张了",
         link_xhs:"小红书",
         link_douyin:"抖音",
         link_github:"GitHub",
@@ -796,6 +802,7 @@ const DICT={
         cutting:"Cutting",mode:"Mode",remove:"Auto Crop",keep:"Keep Gap",autofix:"AI Auto Fix",
         avg:"Avg Width",thresh:"Sensitivity",drop:"DROP OR CLICK",sel_count:"Selected",exp_sel:"Export Selected",
         edit:"Edit",stitch:"Stitch",clear:"Clear Timeline",deselect:"Deselect",delete_sel:"Delete Photos",delete_confirm:"Delete selected photos permanently?",
+        clear_warn:"Clear Anomaly",
         editor_ti:"Editor",done:"Done", reset:"Reset",
         left:"Left Preview",right:"Right Preview",stitch_ti:"Stitch Workshop",assets:"Assets",timeline:"Timeline",
         save:"Save",close:"Close",loading:"PROCESSING",saving:"SAVING",
@@ -840,7 +847,9 @@ const DICT={
         hq_mode:"Original Mode",
         hq_tip:"Enable to use original resolution for preview and editing. Better quality but uses more memory. Recommended for desktop.",
         hq_enabled:"Original Mode Enabled",
-        hq_disabled:"Original Mode Disabled"
+        hq_disabled:"Original Mode Disabled",
+        editor_first:"You are on the first frame",
+        editor_last:"You are on the last frame"
     }
 };
 
@@ -1297,7 +1306,9 @@ function getEffectiveCoords(id){
     const autoEl = document.getElementById('autoFix');
     const auto = autoEl ? autoEl.checked : false;
     let l=d.gL, r=d.gR;
-    if(auto && d.isAnomaly && median.ok){
+    // 仅当：开启 AI 修正、当前帧仍被判为异常、未被手动修改、且未被用户“移除异常”时，
+    // 才用整卷的中位缝宽来覆盖显示（即真正的 AI 自动纠正状态）。
+    if(auto && median && median.ok && d.isAnomaly && !d.isManual && !d._anomalyCleared){
         const w=median.w, c=d.w*median.c;
         l=c-w/2; r=c+w/2;
     }
@@ -1350,10 +1361,13 @@ function calcStats(){
     const cAll = document.getElementById('c-all');
     const cWarn = document.getElementById('c-warn');
     const statW = document.getElementById('statW');
+    const autoEl = document.getElementById('autoFix');
+    const auto = autoEl ? autoEl.checked : false;
     
     if(cAll) cAll.innerText = appData.length;
     
     if(appData.length<3) {
+        median = { w:0, c:0.5, ok:false };
         if(cWarn) cWarn.innerText = appData.filter(d=>d.isAnomaly).length;
         return;
     }
@@ -1362,7 +1376,18 @@ function calcStats(){
     const cs=appData.map(d=>(d.gL+(d.gR-d.gL)/2)/d.w).sort((a,b)=>a-b);
     median={w:medW, c:cs[Math.floor(cs.length/2)], ok:true};
     if(statW) statW.innerText=Math.floor(medW);
-    appData.forEach(d=>d.isAnomaly=Math.abs((d.gR-d.gL)-medW)>medW*0.35);
+    appData.forEach(d=>{
+        if(typeof d.usedAI !== 'boolean') d.usedAI = false;
+        // 如果用户手动“移除异常”，则不再自动把该图片重新打回异常列表
+        if(d._anomalyCleared) {
+            d.isAnomaly = false;
+        } else {
+            d.isAnomaly = Math.abs((d.gR-d.gL)-medW)>medW*0.35;
+        }
+        if(auto && median.ok && d.isAnomaly && !d._anomalyCleared && !d.isManual){
+            d.usedAI = true;
+        }
+    });
     
     if(cWarn) cWarn.innerText = appData.filter(d=>d.isAnomaly).length;
 }
@@ -1375,6 +1400,10 @@ function setFilter(f){
     renderGrid(); 
 }
 function refresh(){ renderGrid(); }
+function handleAutoFixToggle(){
+    calcStats();
+    renderGrid();
+}
 
 function getFilteredList(){
     let list=appData;
@@ -1398,14 +1427,21 @@ function renderGrid(){
         if(!d || d.w <= 0) return; // Skip invalid items
         
         const card=document.createElement('div');
-        const isFixed=d.isAnomaly && auto && median.ok;
+        // AI 徽标逻辑：
+        // - d.usedAI 表示用户曾经明确采纳过 AI 分割（重置到 AI 或在 AI 开启时“移除异常”）
+        // - d.isManual 为 true 表示当前切割线已被用户手动调整过
+        // - 仅当“当前开启 AI 修正”时才显示徽标
+        // => 只有在“已使用 AI 且当前未被手动改动且 AI 修正开启”时显示 AI 徽标；
+        //    手动拖动后徽标消失；若之后通过重置回到 AI，则在 AI 开启时再次显示。
+        const hasAI = auto && !!d.usedAI && !d.isManual;
         const isWarn=d.isAnomaly && !auto;
-        card.className=`card ${selIds.includes(d.id)?'selected':''} ${isWarn?'warn':''}`;
+        card.className=`card ${selIds.includes(d.id)?'selected':''}`;
         const {l,r} = getEffectiveCoords(d.id);
         const lp=(l/d.w)*100, wp=((r-l)/d.w)*100;
         let ov=mode==='remove' ? `<div class="cut-area" style="left:${lp}%; width:${wp}%"></div>` : `<div class="cut-line" style="left:${lp+wp/2}%"></div>`;
         let bdg='';
-        if(isFixed) bdg+=`<span class="badge ai">AI</span>`;
+        if(hasAI) bdg+=`<span class="badge ai">AI</span>`;
+        if(isWarn) bdg+=`<span class="badge warn">!</span>`;
         if(d.rotL!==0) bdg+=`<span class="badge">L ${d.rotL}°</span>`;
         if(d.rotR!==0) bdg+=`<span class="badge">R ${d.rotR}°</span>`;
         
@@ -1447,6 +1483,41 @@ function updateDock(){
     document.getElementById('btnStitch').style.display=n>=2?'inline-flex':'none';
     const delBtn = document.getElementById('btnDelete');
     if(delBtn) delBtn.style.display=n>0?'inline-flex':'none';
+    
+    // 只有当当前选择中至少有一张仍标记为异常的图片时，才显示“移除异常”按钮
+    const btnClearAnom = document.getElementById('btnClearAnomaly');
+    if(btnClearAnom){
+        const hasAnomalySel = appData.some(d=>selIds.includes(d.id) && d.isAnomaly);
+        btnClearAnom.style.display = hasAnomalySel ? 'inline-flex' : 'none';
+    }
+}
+
+// 手动从“异常”中移除所选图片：打上 _anomalyCleared 标记，并清除 isAnomaly
+function clearSelectedAnomaly(){
+    if(!selIds.length) return;
+    let changed = false;
+    appData.forEach(d=>{
+        if(selIds.includes(d.id) && d.isAnomaly){
+            // 将当前“显示中的”切割线（可能是 AI 也可能是原始算法）固化到 gL/gR
+            const {l,r} = getEffectiveCoords(d.id);
+            d.gL = l;
+            d.gR = r;
+            d.isAnomaly = false;
+            d._anomalyCleared = true;
+            // 视为重新回到系统基准切割线，当前状态不再是“手动状态”
+            d.isManual = false;
+            // 若此时处于 AI 修正开启且基准可用，则认为用户已采纳 AI 结果，持久显示 AI 徽标
+            const autoEl = document.getElementById('autoFix');
+            const auto = autoEl ? autoEl.checked : false;
+            if(auto && median && median.ok) d.usedAI = true;
+            changed = true;
+        }
+    });
+    if(changed){
+        calcStats();  // 重新刷新统计与异常计数
+        renderGrid(); // 更新列表和“异常”筛选视图
+        updateDock();
+    }
 }
 
 let sortState = { key: null, asc: true };
@@ -1616,23 +1687,21 @@ function navEdit(d){
     let i=all.indexOf(editId);
     
     if(i===-1){
-        // Current item not in filtered list (e.g. fixed anomaly)
-        // Find closest neighbor based on ID order
-        if(d===1){
-            // Next: Find first ID > editId
-            const nextId = all.find(id => id > editId);
-            editId = nextId !== undefined ? nextId : all[0];
-        } else {
-            // Prev: Find last ID < editId
-            let prevId;
-            for(let k=all.length-1; k>=0; k--) if(all[k] < editId) { prevId = all[k]; break; }
-            editId = prevId !== undefined ? prevId : all[all.length-1];
-        }
-    } else {
-        i+=d;
-        if(i<0)i=all.length-1; if(i>=all.length)i=0; 
-        editId=all[i];
+        // 当前编辑的帧不在当前过滤列表中，直接返回，避免乱跳
+        return;
     }
+    // 非循环：到边界时停住，并用 Toast 提示
+    if(d===1 && i===all.length-1){
+        showToast(t('editor_last'));
+        return;
+    }
+    if(d===-1 && i===0){
+        showToast(t('editor_first'));
+        return;
+    }
+    i += d;
+    if(i<0 || i>=all.length) return;
+    editId = all[i];
     
     // Safety check: ensure editId is valid
     if(!appData[editId]) {
@@ -1679,11 +1748,32 @@ function navEdit(d){
 function resetEdit(){
     if(editId === null || !appData[editId]) return; // Safety check
     const d = appData[editId];
-    // Reset manual flag to allow auto-detection override
-    d.isManual = false;
-    // Re-run detection with force=true
-    detectGap(d, true);
-    d.isAnomaly = false; // Reset anomaly override
+    
+    const autoEl = document.getElementById('autoFix');
+    const auto = autoEl ? autoEl.checked : false;
+    
+    if(auto && median && median.ok){
+        // 在开启 AI 修正的情况下，重置应回到“整卷的中位缝宽”这一 AI 基准，而不是当前手动/默认结果
+        const w = median.w;
+        const c = d.w * median.c;
+        let l = c - w/2;
+        let r = c + w/2;
+        // 与 getEffectiveCoords 中相同的边界收紧逻辑
+        if(d.w > 0){
+            l = Math.floor(Math.max(0, Math.min(l, d.w-1)));
+            r = Math.floor(Math.max(l+1, Math.min(r, d.w)));
+        }
+        d.gL = l;
+        d.gR = r;
+        d.isManual = false;   // 标记为系统给出的推荐值
+        d.usedAI = true;      // 标记为“已使用 AI 修正”，用于持久显示 AI 徽标
+    } else {
+        // 在关闭 AI 修正的情况下，回到默认的自动检测结果
+        d.isManual = false;
+        detectGap(d, true);
+        d.usedAI = false;
+    }
+
     d.rotL = 0; d.rotR = 0; // Reset rotation
     drawEditor(); updatePreviews();
 }
@@ -1741,7 +1831,6 @@ function drawOverlays(){
     ectx.save();
     ectx.scale(sc, sc);
     
-    ectx.fillStyle='rgba(0,0,0,0.7)'; ectx.fillRect(0,0,l,d.h); ectx.fillRect(r,0,d.w-r,d.h);
     const modeEl = document.getElementById('cutMode');
     const mode = modeEl ? modeEl.value : 'remove';
     if(mode==='remove'){
@@ -1787,6 +1876,11 @@ function updateSliderUI(dispW, l, r, realW, mode){
 ecvs.onmousedown=e=>{
     if(editId === null || !appData[editId]) return; // Safety check
     const d=appData[editId], {l,r}=getEffectiveCoords(editId), rect=ecvs.getBoundingClientRect();
+    if(d.isAnomaly) { 
+        // 首次在编辑器中对 AI 修正结果进行拖动时，
+        // 立即把 AI 位置写回真实坐标，后续由 isManual 控制是否继续套用 AI。
+        d.gL=l; d.gR=r; 
+    }
     const tol=Math.max(60, rect.width*0.12);
     const x=(e.clientX-rect.left)*(d.w/rect.width);
     const modeEl = document.getElementById('cutMode');
@@ -1806,6 +1900,14 @@ ecvs.onmousedown=e=>{
 // Bind Slider Events
 const handleSliderStart = (modeStr, e) => {
     if(editId === null || !appData[editId]) return; // Safety check
+    
+    const d = appData[editId];
+    if(d.isAnomaly) {
+        const {l,r} = getEffectiveCoords(editId);
+        // 同步当前显示的 AI 位置为真实坐标，后续由 isManual 控制是否继续套用 AI。
+        d.gL=l; d.gR=r;
+    }
+
     dragMode = modeStr;
     const modeEl = document.getElementById('cutMode');
     if(modeEl && modeEl.value === 'keep'){
@@ -1874,6 +1976,10 @@ function beginSliderDrag(clientX){
     const d = appData[editId];
     if(!d || d.w <= 0) return false;
     const {l,r} = getEffectiveCoords(editId);
+    if(d.isAnomaly) { 
+        // 在滑轨上开始拖动时，同样将 AI 修正位置落盘为手动值，防止后续渲染重新使用默认检测结果。
+        d.gL=l; d.gR=r; 
+    }
     const modeEl = document.getElementById('cutMode');
     const mode = modeEl ? modeEl.value : 'remove';
     const pct = (clientX - rect.left) / rect.width;
@@ -1914,8 +2020,8 @@ function applySliderDrag(clientX, forcePreview=false){
     } else {
         if(dragMode==='L') d.gL=Math.min(x, d.gR-10); else d.gR=Math.max(x, d.gL+10);
     }
-    d.isAnomaly=false; 
     d.isManual=true; // Mark as manually edited
+    d.usedAI=false;
     drawEditor();
     const now = Date.now();
     if(forcePreview || now - lastPreviewTime > 100) { updatePreviews(); lastPreviewTime = now; }
@@ -1946,8 +2052,8 @@ window.onmousemove=e=>{
     } else {
         if(dragMode==='L') d.gL=Math.min(x, d.gR-10); else d.gR=Math.max(x, d.gL+10);
     }
-    d.isAnomaly=false; 
     d.isManual=true; // Mark as manually edited
+    d.usedAI=false;
     drawEditor();
     const now = Date.now();
     if(now - lastPreviewTime > 100) { updatePreviews(); lastPreviewTime = now; }
@@ -2860,8 +2966,8 @@ ecvsTouch.addEventListener('touchmove', e => {
     } else {
         if(dragMode==='L') d.gL=Math.min(x, d.gR-10); else d.gR=Math.max(x, d.gL+10);
     }
-    d.isAnomaly=false; 
     d.isManual=true; // Mark as manually edited
+    d.usedAI=false;
     drawEditor();
     const now = Date.now();
     if(now - lastPreviewTime > 100) { updatePreviews(); lastPreviewTime = now; }
